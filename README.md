@@ -65,6 +65,15 @@ A comprehensive Next.js application that combines advanced security sanitization
 
 ## 🧪 Testing
 
+### Multi-Agent Dashboard
+Visit the main app at `http://localhost:3000` to access the full SkillBridge Agents dashboard with:
+- **Overview Tab**: System status and agent information
+- **Skill Gaps Tab**: Analyze your skills and identify gaps
+- **Learning Tab**: Get personalized learning paths
+- **Career Tab**: Resume optimization and job search tools
+- **Progress Tab**: Track your learning progress
+- **Chat Tab**: Multi-agent chat with intelligent routing
+
 ### Interactive Demo
 Visit `/demo` to test the sanitizer with pre-built examples:
 - API Keys (OpenAI, AWS, GitHub)
@@ -73,8 +82,35 @@ Visit `/demo` to test the sanitizer with pre-built examples:
 - Credit card numbers
 - JWT tokens
 
-### Manual Testing
-Try typing these examples in the chat:
+### Multi-Agent Testing
+Try these examples in the chat to see different agents in action:
+
+**GitHub Repository Analysis (Gap Agent):**
+```
+Analyze this GitHub repo for skills: https://github.com/user/repo
+What technologies are used in this codebase?
+```
+
+**Learning Path Generation (Learning Agent):**
+```
+Create a learning path for becoming a React developer
+What should I study to learn machine learning?
+```
+
+**Career Development (Career Agent):**
+```
+Help me optimize my resume for a frontend developer position
+Find open source projects I can contribute to
+```
+
+**Progress Tracking (Progress Agent):**
+```
+Show me my learning progress
+What skills have I improved this month?
+```
+
+### Security Testing
+Test the sanitizer with sensitive data:
 ```
 My API key is sk-1234567890abcdef1234567890abcdef1234567890abcdef
 Database: mongodb://user:password123@localhost:27017/mydb
@@ -82,6 +118,20 @@ Contact: john.doe@example.com, Phone: (555) 123-4567
 ```
 
 ## 🔧 Configuration
+
+### Multi-Agent System
+```typescript
+// Coordinator Agent routes queries to specialized agents
+const coordinator = new CoordinatorAgent();
+const routedAgent = coordinator.routeQuery(userQuery, context);
+
+// Available agents:
+// - coordinator: General queries and orchestration
+// - gap_agent: Skill gap analysis and GitHub repo analysis
+// - learning_agent: Personalized learning paths
+// - career_agent: Resume optimization and job search
+// - progress_agent: Learning analytics and tracking
+```
 
 ### Sanitizer Settings
 ```typescript
@@ -107,23 +157,33 @@ SANITIZER_ENABLE_STRIPPING=false
 
 ## 🏗️ Architecture
 
-### Data Flow
+### Multi-Agent Data Flow
 ```
-User Input → Real-time Detection → Sanitization → UI Feedback → API Call
-     ↓              ↓                    ↓            ↓
-  "My key is     [Detects API key]   [Masks key]   [Shows warning]  [Sends sanitized]
-   sk-123..."    [Critical severity]  [****]       [to user]        [text to API]
+User Input → Sanitizer Agent → Coordinator Agent → Specialized Agent → Response
+     ↓              ↓                    ↓                    ↓
+  "Analyze my    [Detects & masks]   [Routes to Gap]    [GitHub analysis]
+   GitHub repo   [secrets]           [Agent]            [& recommendations]
+   for skills"
 ```
 
+### Agent Responsibilities
+- **🛡️ Sanitizer Agent**: Real-time secret detection and sanitization
+- **🤖 Coordinator Agent**: Intelligent query routing and orchestration
+- **📊 Gap Analysis Agent**: Skill gap analysis, GitHub repo analysis, code review
+- **📚 Learning Agent**: Personalized learning paths, course recommendations
+- **💼 Career Agent**: Resume optimization, job search, portfolio building
+- **📈 Progress Agent**: Learning analytics, progress tracking, achievements
+
 ### Components
+- **SkillBridgeDashboard**: Main multi-agent interface with 6 tabs
+- **ChatAssistant**: Multi-agent chat interface with routing
 - **SanitizerAgent**: Core detection and sanitization logic
-- **SanitizerPromptInput**: Enhanced input with real-time sanitization
-- **SanitizerIndicator**: Visual feedback for detected secrets
-- **SanitizerDemo**: Interactive testing interface
+- **CoordinatorAgent**: Query routing and agent orchestration
+- **SpecializedAgents**: Domain-specific AI agents for career development
 
 ## 🔍 Secret Detection
 
-The agent detects various types of sensitive data:
+The sanitizer agent detects various types of sensitive data:
 
 ### Critical Severity
 - API Keys (OpenAI, AWS, GitHub)
@@ -151,21 +211,39 @@ The agent detects various types of sensitive data:
 - **Real-time Feedback**: Immediate visual warnings
 - **Transparent Logging**: See exactly what was sanitized
 - **Configurable Rules**: Customize detection patterns
+- **Multi-layer Security**: Sanitization integrated into all agent interactions
 
 ## 📁 Project Structure
 
 ```
 skillbridge-agents/
 ├── app/
-│   ├── api/chat/          # AI chat API endpoint
-│   ├── demo/              # Interactive demo page
-│   └── page.tsx           # Main chat interface
+│   ├── api/
+│   │   ├── chat/          # Multi-agent chat API endpoint
+│   │   ├── auth/          # Authentication endpoints
+│   │   ├── career/        # Career agent endpoints
+│   │   ├── modules/       # Learning modules endpoints
+│   │   ├── progress/      # Progress tracking endpoints
+│   │   └── secure_gaps/   # Gap analysis endpoints
+│   ├── demo/              # Sanitizer demo page
+│   ├── about/             # About page
+│   ├── privacy/           # Privacy policy
+│   └── page.tsx           # Main SkillBridge dashboard
 ├── components/
-│   ├── sanitizer/         # Sanitizer components
-│   ├── chat/              # Chat interface
-│   └── ui/                # UI components
+│   ├── skillbridge/       # Main dashboard components
+│   ├── sanitizer/         # Security sanitizer components
+│   ├── chat/              # Multi-agent chat interface
+│   ├── ai-elements/       # AI-specific UI components
+│   └── ui/                # Reusable UI components
 ├── lib/
-│   └── sanitizer.ts       # Core sanitization logic
+│   ├── agents/            # Multi-agent framework
+│   │   ├── coordinator.ts # Query routing and orchestration
+│   │   ├── gap-agent.ts   # Skill gap analysis
+│   │   ├── learning-agent.ts # Learning paths
+│   │   ├── career-agent.ts # Career development
+│   │   └── progress-agent.ts # Progress tracking
+│   ├── sanitizer.ts       # Core sanitization logic
+│   └── utils.ts           # Utility functions
 └── README.md
 ```
 
