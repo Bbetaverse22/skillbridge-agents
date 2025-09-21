@@ -7,13 +7,7 @@ import {
   ConversationEmptyState,
 } from "@/components/ai-elements/conversation";
 import { Message, MessageContent } from "@/components/ai-elements/message";
-import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputTextarea,
-  PromptInputToolbar,
-  PromptInputSubmit,
-} from "@/components/ai-elements/prompt-input";
+import { SanitizerPromptInput } from "@/components/sanitizer/sanitizer-prompt-input";
 import {
   Sources,
   SourcesTrigger,
@@ -177,15 +171,11 @@ export default function ChatAssistant() {
       </Conversation>
 
       <div className="p-4 flex-shrink-0">
-        <PromptInput onSubmit={handleSubmit}>
-          <PromptInputBody>
-            <PromptInputTextarea placeholder="What would you like to know?" />
-            <PromptInputToolbar>
-              <div />
-              <PromptInputSubmit status={isLoading ? "submitted" : undefined} />
-            </PromptInputToolbar>
-          </PromptInputBody>
-        </PromptInput>
+        <SanitizerPromptInput
+          onSubmit={handleSubmit}
+          placeholder="What would you like to know? (Secrets will be automatically sanitized)"
+          disabled={isLoading}
+        />
       </div>
     </div>
   );

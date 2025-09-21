@@ -2,6 +2,7 @@ import { SYSTEM_INSTRUCTIONS } from "@/components/agent/prompt";
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
+import { sanitizerAgent } from "@/lib/sanitizer";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,8 +15,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert frontend message format to AI SDK format
-    const aiMessages = messages.map((msg: any) => ({
+    // Server-side validation: Double-check for secrets that might have leaked through
+    const validationResults = messages.map((msg: any) => {
+      if (msg.role === 'user') {
+        const validation = sanitizerAgent.validate(msg.content);
+        if (!validation.isValid) {
+          console.warn('Server-side validation detected secrets:', validation.remainingSecrets);
+          // Sanitize the message content
+          const sanitizedResult = sanitizerAgent.sanitize(msg.content);
+          return {
+            role: msg.role,
+            content: sanitizedResult.sanitizedText,
+            originalContent: msg.content,
+            wasSanitized: sanitizedResult.isSanitized,
+            secretsFound: sanitizedResult.secretsFound,
+          };
+        }
+      }
+      return {
+        role: msg.role,
+        content: msg.content,
+      };
+    });
+
+    // Convert to AI SDK format
+    const aiMessages = validationResults.map((msg: any) => ({
       role: msg.role,
       content: msg.content,
     }));

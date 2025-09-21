@@ -1,6 +1,7 @@
 {
-  "name": "typescript-next-starter",
-  "version": "0.1.0",
+  "name": "sanitizer-agent",
+  "version": "1.0.0",
+  "description": "Security Sanitizer Agent - Automatically detect and sanitize secrets before processing",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
