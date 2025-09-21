@@ -1,14 +1,26 @@
-# 🔒 Security Sanitizer Agent
+# 🚀 SkillBridge Agents
 
-A Next.js application that automatically detects and sanitizes sensitive data before processing or network calls. Built with TypeScript, AI SDK 5, and modern security practices.
+A comprehensive Next.js application that combines advanced security sanitization with a multi-agent framework for career development and skill building. Built with TypeScript, AI SDK 5, and modern security practices.
 
 ## ✨ Features
 
+### 🛡️ Security Sanitizer Agent
 - **Real-time Secret Detection**: Automatically detects API keys, passwords, personal info, and more
 - **Client-side Sanitization**: Strips/masks secrets before any network calls
 - **Multi-layer Security**: Client-side + server-side validation
 - **Visual Feedback**: Clear indicators and warnings for detected secrets
-- **Interactive Demo**: Test different types of sensitive data
+
+### 🤖 Multi-Agent Framework
+- **Coordinator Agent**: Routes queries to appropriate specialized agents
+- **Gap Analysis Agent**: Analyzes skill gaps with radar charts and recommendations
+- **Learning Path Agent**: Creates personalized learning modules and resources
+- **Career Development Agent**: Generates resumes, badges, and finds OSS opportunities
+- **Progress Tracking Agent**: Tracks learning progress and provides analytics
+
+### 🎨 Modern UI & Experience
+- **Interactive Dashboard**: Comprehensive SkillBridge dashboard with multiple tabs
+- **Multi-Agent Chat**: Chat interface that routes to specialized agents
+- **Real-time Sanitization**: All user input automatically sanitized
 - **TypeScript**: Full type safety and better developer experience
 - **Modern UI**: Built with shadcn/ui and Tailwind CSS
 
@@ -23,8 +35,8 @@ A Next.js application that automatically detects and sanitizes sensitive data be
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Bbetaverse22/sanitizer-agent.git
-   cd sanitizer-agent
+   git clone https://github.com/Bbetaverse22/skillbridge-agents.git
+   cd skillbridge-agents
    ```
 
 2. **Install dependencies**
@@ -143,7 +155,7 @@ The agent detects various types of sensitive data:
 ## 📁 Project Structure
 
 ```
-sanitizer-agent/
+skillbridge-agents/
 ├── app/
 │   ├── api/chat/          # AI chat API endpoint
 │   ├── demo/              # Interactive demo page

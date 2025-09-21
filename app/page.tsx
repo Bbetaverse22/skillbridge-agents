@@ -6,9 +6,9 @@ export default function Home() {
       <div className="border-b p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">Security Sanitizer Agent</h1>
+            <h1 className="text-xl font-semibold">SkillBridge Agents</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Automatically detect and sanitize secrets before processing
+              Multi-Agent Framework for Career Development with Security Sanitization
             </p>
           </div>
           <a

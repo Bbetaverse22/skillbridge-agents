@@ -1,7 +1,7 @@
 {
-  "name": "sanitizer-agent",
+  "name": "skillbridge-agents",
   "version": "1.0.0",
-  "description": "Security Sanitizer Agent - Automatically detect and sanitize secrets before processing",
+  "description": "SkillBridge Agents - Multi-Agent Framework for Career Development with Security Sanitization",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
