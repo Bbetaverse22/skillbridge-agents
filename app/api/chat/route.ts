@@ -3,6 +3,7 @@ import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizerAgent } from "@/lib/sanitizer";
+import { CoordinatorAgent } from "@/lib/agents/coordinator";
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,27 +39,44 @@ export async function POST(request: NextRequest) {
       };
     });
 
+    // Initialize Coordinator Agent
+    const coordinatorAgent = new CoordinatorAgent();
+
+    // Route query to appropriate agent
+    const lastMessage = messages[messages.length - 1];
+    const routedAgent = coordinatorAgent.routeQuery(lastMessage.content, {});
+
     // Convert to AI SDK format
     const aiMessages = validationResults.map((msg: any) => ({
       role: msg.role,
       content: msg.content,
     }));
 
-    const result = await generateText({
-      model: openai("gpt-5"),
-      system: SYSTEM_INSTRUCTIONS,
-      messages: aiMessages,
-      tools: {
-        web_search: openai.tools.webSearch({
-          searchContextSize: "low",
-        }),
-      },
-    });
+    // Generate response based on routed agent
+    let result;
+    if (routedAgent === 'coordinator') {
+      // Handle general queries with Coordinator Agent
+      result = await generateText({
+        model: openai("gpt-4o"),
+        system: SYSTEM_INSTRUCTIONS,
+        messages: aiMessages,
+        tools: {
+          web_search: openai.tools.webSearch({
+            searchContextSize: "low",
+          }),
+        },
+      });
+    } else {
+      // Route to specialized agent
+      result = await coordinatorAgent.handleSpecializedQuery(routedAgent, aiMessages);
+    }
 
     return NextResponse.json({
       response: result.text,
       sources: result.sources || [],
-      toolCalls: result.steps || [],
+      toolCalls: result.toolCalls || [],
+      routedAgent,
+      sanitizationApplied: validationResults.some((msg: any) => msg.wasSanitized),
     });
   } catch (error) {
     console.error("Chat API error:", error);
