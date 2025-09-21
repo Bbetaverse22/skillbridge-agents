@@ -23,7 +23,7 @@ A Next.js application that automatically detects and sanitizes sensitive data be
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/sanitizer-agent.git
+   git clone https://github.com/Bbetaverse22/sanitizer-agent.git
    cd sanitizer-agent
    ```
 
