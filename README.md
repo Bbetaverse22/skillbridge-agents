@@ -133,17 +133,6 @@ const routedAgent = coordinator.routeQuery(userQuery, context);
 // - progress_agent: Learning analytics and tracking
 ```
 
-### Sanitizer Settings
-```typescript
-const config = {
-  enableMasking: true,      // Replace with [MASKED]
-  enableStripping: false,   // Remove completely
-  enableHashing: false,     // Replace with [HASHED_TYPE]
-  maskCharacter: '*',       // Character for masking
-  strictMode: true,         // Enable all detection patterns
-};
-```
-
 ### Environment Variables
 ```env
 # Required
@@ -153,17 +142,6 @@ OPENAI_API_KEY=your_openai_api_key_here
 SANITIZER_STRICT_MODE=true
 SANITIZER_ENABLE_MASKING=true
 SANITIZER_ENABLE_STRIPPING=false
-```
-
-## 🏗️ Architecture
-
-### Multi-Agent Data Flow
-```
-User Input → Sanitizer Agent → Coordinator Agent → Specialized Agent → Response
-     ↓              ↓                    ↓                    ↓
-  "Analyze my    [Detects & masks]   [Routes to Gap]    [GitHub analysis]
-   GitHub repo   [secrets]           [Agent]            [& recommendations]
-   for skills"
 ```
 
 ### Agent Responsibilities
@@ -180,111 +158,3 @@ User Input → Sanitizer Agent → Coordinator Agent → Specialized Agent → R
 - **SanitizerAgent**: Core detection and sanitization logic
 - **CoordinatorAgent**: Query routing and agent orchestration
 - **SpecializedAgents**: Domain-specific AI agents for career development
-
-## 🔍 Secret Detection
-
-The sanitizer agent detects various types of sensitive data:
-
-### Critical Severity
-- API Keys (OpenAI, AWS, GitHub)
-- Database connection strings
-- Private keys and certificates
-
-### High Severity
-- Passwords and credentials
-- JWT tokens
-- Credit card numbers
-- Social Security Numbers
-
-### Medium Severity
-- Email addresses
-- Phone numbers
-
-### Low Severity
-- IP addresses
-- File paths
-
-## 🛡️ Security Features
-
-- **Client-side Protection**: Secrets never leave the browser in original form
-- **Server-side Validation**: Double-check for leaked secrets
-- **Real-time Feedback**: Immediate visual warnings
-- **Transparent Logging**: See exactly what was sanitized
-- **Configurable Rules**: Customize detection patterns
-- **Multi-layer Security**: Sanitization integrated into all agent interactions
-
-## 📁 Project Structure
-
-```
-skillbridge-agents/
-├── app/
-│   ├── api/
-│   │   ├── chat/          # Multi-agent chat API endpoint
-│   │   ├── auth/          # Authentication endpoints
-│   │   ├── career/        # Career agent endpoints
-│   │   ├── modules/       # Learning modules endpoints
-│   │   ├── progress/      # Progress tracking endpoints
-│   │   └── secure_gaps/   # Gap analysis endpoints
-│   ├── demo/              # Sanitizer demo page
-│   ├── about/             # About page
-│   ├── privacy/           # Privacy policy
-│   └── page.tsx           # Main SkillBridge dashboard
-├── components/
-│   ├── skillbridge/       # Main dashboard components
-│   ├── sanitizer/         # Security sanitizer components
-│   ├── chat/              # Multi-agent chat interface
-│   ├── ai-elements/       # AI-specific UI components
-│   └── ui/                # Reusable UI components
-├── lib/
-│   ├── agents/            # Multi-agent framework
-│   │   ├── coordinator.ts # Query routing and orchestration
-│   │   ├── gap-agent.ts   # Skill gap analysis
-│   │   ├── learning-agent.ts # Learning paths
-│   │   ├── career-agent.ts # Career development
-│   │   └── progress-agent.ts # Progress tracking
-│   ├── sanitizer.ts       # Core sanitization logic
-│   └── utils.ts           # Utility functions
-└── README.md
-```
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Push to GitHub
-2. Connect repository to Vercel
-3. Add environment variables
-4. Deploy
-
-### Other Platforms
-- **Netlify**: Works with Next.js
-- **Railway**: Easy deployment
-- **Docker**: Containerized deployment
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-MIT License - see LICENSE file for details
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) - React framework
-- [AI SDK](https://ai-sdk.dev/) - AI integration
-- [shadcn/ui](https://ui.shadcn.com/) - UI components
-- [Tailwind CSS](https://tailwindcss.com/) - Styling
-
-## 📞 Support
-
-- Create an issue for bugs or feature requests
-- Check the demo page for examples
-- Review the code for implementation details
-
----
-
-**⚠️ Security Notice**: This tool helps prevent accidental exposure of secrets, but always follow security best practices and never commit sensitive data to version control.
