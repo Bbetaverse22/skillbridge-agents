@@ -28,6 +28,8 @@ export interface SanitizationConfig {
   maskCharacter: string;
   showWarnings: boolean;
   strictMode: boolean;
+  allowGitHubUrls: boolean;
+  allowedDomains: string[];
 }
 
 // Default configuration
@@ -38,6 +40,8 @@ const DEFAULT_CONFIG: SanitizationConfig = {
   maskCharacter: '*',
   showWarnings: true,
   strictMode: true,
+  allowGitHubUrls: true,
+  allowedDomains: ['github.com', 'gitlab.com', 'bitbucket.org'],
 };
 
 // Secret detection patterns
@@ -126,10 +130,10 @@ const SECRET_PATTERNS = [
     description: 'IP address detected',
   },
   
-  // File paths
+  // File paths (but not URLs)
   {
     type: 'file_path',
-    pattern: /[C-Z]:\\[^\\]+\\[^\\]+|\/[^\/]+\/[^\/]+/gi,
+    pattern: /(?:[C-Z]:\\[^\\]+\\[^\\]+|\/[^\/]+\/[^\/]+)(?![^\s]*\.(com|org|net|io|dev))/gi,
     severity: 'low' as const,
     description: 'File path detected',
   },
@@ -161,6 +165,29 @@ export class SanitizerAgent {
   }
 
   /**
+   * Check if a URL is safe (whitelisted domains)
+   */
+  private isSafeUrl(text: string, startIndex: number, endIndex: number): boolean {
+    if (!this.config.allowGitHubUrls) return false;
+    
+    // Extract the URL from the text
+    const url = text.slice(startIndex, endIndex);
+    
+    // Check if it's a GitHub URL or other allowed domains
+    return this.config.allowedDomains.some(domain => 
+      url.toLowerCase().includes(domain.toLowerCase())
+    );
+  }
+
+  /**
+   * Check if text contains GitHub URLs that should be preserved
+   */
+  private containsGitHubUrl(text: string): boolean {
+    const githubUrlPattern = /https?:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+/gi;
+    return githubUrlPattern.test(text);
+  }
+
+  /**
    * Detect secrets in text without sanitizing
    */
   detectSecrets(text: string): SecretMatch[] {
@@ -171,6 +198,11 @@ export class SanitizerAgent {
       let match;
       
       while ((match = regex.exec(text)) !== null) {
+        // Skip if it's a safe URL (like GitHub URLs)
+        if (this.isSafeUrl(text, match.index, match.index + match[0].length)) {
+          continue;
+        }
+        
         secrets.push({
           type: pattern.type,
           pattern: pattern.pattern.source,
@@ -190,6 +222,68 @@ export class SanitizerAgent {
    * Sanitize text by masking or stripping secrets
    */
   sanitize(text: string): SanitizationResult {
+    // Special handling for GitHub URLs - preserve them
+    if (this.containsGitHubUrl(text)) {
+      // Extract GitHub URLs and temporarily replace them
+      const githubUrlPattern = /https?:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+/gi;
+      const githubUrls: string[] = [];
+      let tempText = text.replace(githubUrlPattern, (match) => {
+        const placeholder = `__GITHUB_URL_${githubUrls.length}__`;
+        githubUrls.push(match);
+        return placeholder;
+      });
+
+      // Detect secrets in text without GitHub URLs
+      const secrets = this.detectSecrets(tempText);
+      let sanitizedText = tempText;
+      const sanitizationLog: string[] = [];
+      
+      if (secrets.length === 0) {
+        // No secrets found, restore GitHub URLs
+        let finalText = text;
+        githubUrls.forEach((url, index) => {
+          finalText = finalText.replace(`__GITHUB_URL_${index}__`, url);
+        });
+        
+        return {
+          originalText: text,
+          sanitizedText: finalText,
+          secretsFound: [],
+          sanitizationLog: ['No secrets detected'],
+          isSanitized: false,
+        };
+      }
+
+      // Sort secrets by start index in reverse order to avoid index shifting
+      const sortedSecrets = secrets.sort((a, b) => b.startIndex - a.startIndex);
+      
+      for (const secret of sortedSecrets) {
+        const replacement = this.getReplacement(secret);
+        sanitizedText = 
+          sanitizedText.slice(0, secret.startIndex) + 
+          replacement + 
+          sanitizedText.slice(secret.endIndex);
+        
+        sanitizationLog.push(
+          `${secret.severity.toUpperCase()}: ${secret.type} - ${secret.description}`
+        );
+      }
+
+      // Restore GitHub URLs
+      githubUrls.forEach((url, index) => {
+        sanitizedText = sanitizedText.replace(`__GITHUB_URL_${index}__`, url);
+      });
+
+      return {
+        originalText: text,
+        sanitizedText,
+        secretsFound: secrets,
+        sanitizationLog,
+        isSanitized: true,
+      };
+    }
+
+    // Regular sanitization for non-GitHub URLs
     const secrets = this.detectSecrets(text);
     let sanitizedText = text;
     const sanitizationLog: string[] = [];

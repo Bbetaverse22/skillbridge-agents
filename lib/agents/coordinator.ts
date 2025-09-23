@@ -108,15 +108,17 @@ export class CoordinatorAgent {
     const systemPrompt = this.getSystemPrompt(agentType);
     
     try {
+      const tools: any = {
+        web_search: openai.tools.webSearch({
+          searchContextSize: "low",
+        }),
+      };
+
       const result = await generateText({
         model: openai("gpt-4o"),
         system: systemPrompt,
         messages,
-        tools: {
-          web_search: openai.tools.webSearch({
-            searchContextSize: "low",
-          }),
-        },
+        tools,
       });
 
       return {
@@ -149,6 +151,21 @@ Your expertise includes:
 - Recommending specific learning resources and development paths
 - Analyzing GitHub repositories to extract skills and technologies used
 - Code analysis to identify programming patterns and skill levels
+- Accessing and discussing user's skill gap analysis results
+
+IMPORTANT: You have access to the user's skill gap analysis data. When users ask about their skills, gaps, or recommendations:
+
+1. First check if they have recent skill gap analysis data by making an API call to:
+   GET /api/skill-gaps?action=summary&userId=user_123
+
+2. If data is available, reference their specific skills, gaps, and recommendations from their analysis
+
+3. If no data is available, guide them to run a GitHub repository analysis first
+
+4. You can also get specific skill details with:
+   GET /api/skill-gaps?action=skill&userId=user_123&skillName=[SKILL_NAME]
+
+Always provide personalized advice based on their actual skill levels and analysis results when available.
 
 When analyzing skills, consider:
 - Technical skills (programming languages, frameworks, tools)
@@ -163,6 +180,13 @@ For GitHub repository analysis:
 - Identify skill levels based on code complexity and patterns
 - Suggest learning opportunities based on the technologies used
 - Compare against industry standards and best practices
+
+When discussing skill gaps:
+- Always check if the user has recent skill gap analysis data by making API calls
+- Reference specific skills, gaps, and recommendations from their analysis
+- Provide personalized advice based on their actual skill levels
+- Suggest next steps for skill development
+- If no skill gap data is available, guide them to run a GitHub analysis first
 
 Provide actionable, specific recommendations for skill development.
 `,

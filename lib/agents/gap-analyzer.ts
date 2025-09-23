@@ -1,0 +1,841 @@
+export interface SkillCategory {
+  id: string;
+  name: string;
+  skills: Skill[];
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  currentLevel: number; // 1-5 scale
+  targetLevel: number; // 1-5 scale
+  importance: number; // 1-5 scale
+  category: string;
+}
+
+export interface SkillGap {
+  skill: Skill;
+  gap: number; // targetLevel - currentLevel
+  priority: number; // calculated based on gap and importance
+  recommendations: string[];
+}
+
+export interface GitHubAnalysis {
+  repository: string;
+  technologies: string[];
+  frameworks: string[];
+  languages: string[];
+  tools: string[];
+  skillLevel: 'beginner' | 'intermediate' | 'advanced';
+  recommendations: string[];
+}
+
+export interface GapAnalysisResult {
+  overallScore: number;
+  skillGaps: SkillGap[];
+  categories: SkillCategory[];
+  recommendations: string[];
+  learningPath: string[];
+  githubAnalysis?: GitHubAnalysis;
+  chatAnalysis?: any;
+  analysisType?: 'github' | 'ai-chat';
+}
+
+export class GapAnalyzerAgent {
+  private skillCategories: SkillCategory[] = [
+    {
+      id: 'technical',
+      name: 'Technical Skills',
+      skills: [
+        { id: 'programming', name: 'Programming Languages', currentLevel: 1, targetLevel: 5, importance: 5, category: 'technical' },
+        { id: 'frameworks', name: 'Frameworks & Libraries', currentLevel: 1, targetLevel: 5, importance: 5, category: 'technical' },
+        { id: 'databases', name: 'Database Management', currentLevel: 1, targetLevel: 4, importance: 4, category: 'technical' },
+        { id: 'cloud', name: 'Cloud Platforms', currentLevel: 1, targetLevel: 4, importance: 4, category: 'technical' },
+        { id: 'devops', name: 'DevOps & CI/CD', currentLevel: 1, targetLevel: 3, importance: 3, category: 'technical' },
+        { id: 'testing', name: 'Testing & QA', currentLevel: 1, targetLevel: 4, importance: 4, category: 'technical' },
+      ]
+    },
+    {
+      id: 'soft',
+      name: 'Soft Skills',
+      skills: [
+        { id: 'communication', name: 'Communication', currentLevel: 1, targetLevel: 5, importance: 5, category: 'soft' },
+        { id: 'leadership', name: 'Leadership', currentLevel: 1, targetLevel: 4, importance: 4, category: 'soft' },
+        { id: 'problem-solving', name: 'Problem Solving', currentLevel: 1, targetLevel: 5, importance: 5, category: 'soft' },
+        { id: 'teamwork', name: 'Teamwork', currentLevel: 1, targetLevel: 4, importance: 4, category: 'soft' },
+        { id: 'time-management', name: 'Time Management', currentLevel: 1, targetLevel: 4, importance: 4, category: 'soft' },
+      ]
+    },
+    {
+      id: 'domain',
+      name: 'Domain Knowledge',
+      skills: [
+        { id: 'industry', name: 'Industry Knowledge', currentLevel: 1, targetLevel: 4, importance: 4, category: 'domain' },
+        { id: 'business', name: 'Business Acumen', currentLevel: 1, targetLevel: 3, importance: 3, category: 'domain' },
+        { id: 'architecture', name: 'System Architecture', currentLevel: 1, targetLevel: 4, importance: 4, category: 'domain' },
+        { id: 'security', name: 'Security Best Practices', currentLevel: 1, targetLevel: 4, importance: 4, category: 'domain' },
+      ]
+    }
+  ];
+
+  /**
+   * Analyze skill gaps based on current and target skill levels
+   */
+  analyzeSkillGaps(skills: Skill[]): GapAnalysisResult {
+    const skillGaps: SkillGap[] = [];
+    let totalGap = 0;
+    let totalPossibleGap = 0;
+
+    // Calculate gaps for each skill
+    skills.forEach(skill => {
+      const gap = skill.targetLevel - skill.currentLevel;
+      const priority = gap * skill.importance;
+      
+      skillGaps.push({
+        skill,
+        gap,
+        priority,
+        recommendations: this.generateSkillRecommendations(skill, gap)
+      });
+
+      totalGap += gap * skill.importance;
+      totalPossibleGap += (5 - skill.currentLevel) * skill.importance;
+    });
+
+    // Calculate overall score (0-100)
+    const overallScore = totalPossibleGap > 0 ? Math.round(((totalPossibleGap - totalGap) / totalPossibleGap) * 100) : 0;
+
+    // Sort gaps by priority
+    skillGaps.sort((a, b) => b.priority - a.priority);
+
+    // Generate general recommendations
+    const recommendations = this.generateGeneralRecommendations(skillGaps);
+    const learningPath = this.generateLearningPath(skillGaps);
+
+    return {
+      overallScore,
+      skillGaps,
+      categories: this.skillCategories,
+      recommendations,
+      learningPath
+    };
+  }
+
+  /**
+   * Analyze GitHub repository for skills and technologies
+   */
+  async analyzeGitHubRepository(repoUrl: string): Promise<GitHubAnalysis> {
+    try {
+      // Extract owner and repo from URL
+      const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+      if (!match) {
+        throw new Error('Invalid GitHub repository URL');
+      }
+
+      const [, owner, repo] = match;
+      const cleanRepo = repo.replace(/\.git$/, ''); // Remove .git suffix if present
+
+      // Fetch repository data from GitHub API
+      const [repoData, languagesData, contentsData] = await Promise.all([
+        this.fetchGitHubData(`https://api.github.com/repos/${owner}/${cleanRepo}`),
+        this.fetchGitHubData(`https://api.github.com/repos/${owner}/${cleanRepo}/languages`),
+        this.fetchGitHubData(`https://api.github.com/repos/${owner}/${cleanRepo}/contents`)
+      ]);
+
+      // Extract technologies and frameworks
+      const technologies = this.extractTechnologies(repoData, languagesData, contentsData);
+      const frameworks = this.extractFrameworks(contentsData, languagesData);
+      const languages = Object.keys(languagesData).sort((a, b) => languagesData[b] - languagesData[a]);
+      const tools = this.extractTools(contentsData);
+
+      // Determine skill level based on repository complexity
+      const skillLevel = this.determineSkillLevel(repoData, languagesData, contentsData);
+
+      // Generate recommendations based on actual technologies found
+      const recommendations = this.generateTechnologyRecommendations(languages, frameworks, technologies);
+
+      return {
+        repository: repoUrl,
+        technologies,
+        frameworks,
+        languages,
+        tools,
+        skillLevel,
+        recommendations
+      };
+
+    } catch (error) {
+      console.error('GitHub analysis error:', error);
+      throw new Error(`Failed to analyze repository: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Automatically generate skill assessment from GitHub analysis
+   */
+  async generateAutomaticSkillAssessment(githubAnalysis: GitHubAnalysis): Promise<GapAnalysisResult> {
+    // Create skills based on discovered technologies
+    const skills = this.createSkillsFromTechnologies(githubAnalysis);
+    
+    // Analyze skill gaps automatically
+    const analysisResult = this.analyzeSkillGaps(skills);
+    
+    // Enhance recommendations with GitHub-specific insights
+    analysisResult.recommendations = [
+      ...analysisResult.recommendations,
+      ...this.generateGitHubSpecificRecommendations(githubAnalysis)
+    ];
+
+    // Include the GitHub analysis in the result for storage
+    analysisResult.githubAnalysis = githubAnalysis;
+
+    return analysisResult;
+  }
+
+  /**
+   * Create skill objects from discovered technologies
+   */
+  private createSkillsFromTechnologies(githubAnalysis: GitHubAnalysis): Skill[] {
+    const skills: Skill[] = [];
+    
+    // Map technologies to skill categories and levels
+    const technologySkillMap = this.getTechnologySkillMap();
+    
+    // Process languages
+    githubAnalysis.languages.forEach(language => {
+      const skillInfo = technologySkillMap[language.toLowerCase()];
+      if (skillInfo) {
+        skills.push({
+          id: skillInfo.id,
+          name: skillInfo.name,
+          currentLevel: this.inferSkillLevel(githubAnalysis, language),
+          targetLevel: this.getTargetLevelForTechnology(language),
+          importance: skillInfo.importance,
+          category: skillInfo.category
+        });
+      }
+    });
+
+    // Process frameworks
+    githubAnalysis.frameworks.forEach(framework => {
+      const skillInfo = technologySkillMap[framework.toLowerCase()];
+      if (skillInfo) {
+        skills.push({
+          id: skillInfo.id,
+          name: skillInfo.name,
+          currentLevel: this.inferSkillLevel(githubAnalysis, framework),
+          targetLevel: this.getTargetLevelForTechnology(framework),
+          importance: skillInfo.importance,
+          category: skillInfo.category
+        });
+      }
+    });
+
+    // Add general technical skills based on repository complexity
+    skills.push({
+      id: 'programming',
+      name: 'Programming Languages',
+      currentLevel: this.inferGeneralProgrammingLevel(githubAnalysis),
+      targetLevel: 4,
+      importance: 5,
+      category: 'technical'
+    });
+
+    skills.push({
+      id: 'frameworks',
+      name: 'Frameworks & Libraries',
+      currentLevel: this.inferFrameworkLevel(githubAnalysis),
+      targetLevel: 4,
+      importance: 5,
+      category: 'technical'
+    });
+
+    return skills;
+  }
+
+  /**
+   * Infer skill level based on repository analysis
+   */
+  private inferSkillLevel(githubAnalysis: GitHubAnalysis, technology: string): number {
+    const baseLevel = this.getBaseLevelFromSkillLevel(githubAnalysis.skillLevel);
+    
+    // Adjust based on technology complexity and usage
+    const complexityMultiplier = this.getTechnologyComplexity(technology);
+    const usageMultiplier = this.getTechnologyUsage(githubAnalysis, technology);
+    
+    return Math.min(5, Math.max(1, baseLevel * complexityMultiplier * usageMultiplier));
+  }
+
+  /**
+   * Get base level from skill level string
+   */
+  private getBaseLevelFromSkillLevel(skillLevel: string): number {
+    switch (skillLevel) {
+      case 'beginner': return 2;
+      case 'intermediate': return 3;
+      case 'advanced': return 4;
+      default: return 2;
+    }
+  }
+
+  /**
+   * Get technology complexity multiplier
+   */
+  private getTechnologyComplexity(technology: string): number {
+    const complexityMap: { [key: string]: number } = {
+      'javascript': 1.0,
+      'html': 0.8,
+      'css': 0.8,
+      'python': 1.1,
+      'java': 1.2,
+      'typescript': 1.3,
+      'react': 1.2,
+      'vue': 1.2,
+      'angular': 1.4,
+      'node.js': 1.3,
+      'spring': 1.4,
+      'django': 1.2,
+      'flask': 1.1,
+      'express': 1.1,
+      'mongodb': 1.1,
+      'postgresql': 1.2,
+      'mysql': 1.0,
+      'docker': 1.2,
+      'kubernetes': 1.5,
+      'aws': 1.4,
+      'azure': 1.4,
+      'gcp': 1.4
+    };
+    
+    return complexityMap[technology.toLowerCase()] || 1.0;
+  }
+
+  /**
+   * Get technology usage multiplier based on repository
+   */
+  private getTechnologyUsage(githubAnalysis: GitHubAnalysis, technology: string): number {
+    // If technology is in primary languages, give higher multiplier
+    if (githubAnalysis.languages.includes(technology)) {
+      return 1.2;
+    }
+    
+    // If technology is in frameworks, give medium multiplier
+    if (githubAnalysis.frameworks.includes(technology)) {
+      return 1.1;
+    }
+    
+    // If technology is in tools, give lower multiplier
+    if (githubAnalysis.tools.includes(technology)) {
+      return 1.0;
+    }
+    
+    return 0.8;
+  }
+
+  /**
+   * Get target level for technology
+   */
+  private getTargetLevelForTechnology(technology: string): number {
+    // Set target levels based on technology importance
+    const targetLevels: { [key: string]: number } = {
+      'javascript': 4,
+      'typescript': 4,
+      'python': 4,
+      'java': 4,
+      'react': 4,
+      'vue': 4,
+      'angular': 4,
+      'node.js': 4,
+      'spring': 4,
+      'django': 4,
+      'flask': 3,
+      'express': 3,
+      'mongodb': 3,
+      'postgresql': 3,
+      'mysql': 3,
+      'docker': 3,
+      'kubernetes': 4,
+      'aws': 4,
+      'azure': 4,
+      'gcp': 4
+    };
+    
+    return targetLevels[technology.toLowerCase()] || 3;
+  }
+
+  /**
+   * Get technology to skill mapping
+   */
+  private getTechnologySkillMap(): { [key: string]: any } {
+    return {
+      'javascript': { id: 'programming', name: 'JavaScript', importance: 5, category: 'technical' },
+      'typescript': { id: 'programming', name: 'TypeScript', importance: 5, category: 'technical' },
+      'python': { id: 'programming', name: 'Python', importance: 5, category: 'technical' },
+      'java': { id: 'programming', name: 'Java', importance: 5, category: 'technical' },
+      'react': { id: 'frameworks', name: 'React', importance: 5, category: 'technical' },
+      'vue': { id: 'frameworks', name: 'Vue.js', importance: 4, category: 'technical' },
+      'angular': { id: 'frameworks', name: 'Angular', importance: 4, category: 'technical' },
+      'node.js': { id: 'frameworks', name: 'Node.js', importance: 5, category: 'technical' },
+      'spring': { id: 'frameworks', name: 'Spring Framework', importance: 5, category: 'technical' },
+      'django': { id: 'frameworks', name: 'Django', importance: 4, category: 'technical' },
+      'flask': { id: 'frameworks', name: 'Flask', importance: 3, category: 'technical' },
+      'express': { id: 'frameworks', name: 'Express.js', importance: 4, category: 'technical' },
+      'mongodb': { id: 'databases', name: 'MongoDB', importance: 4, category: 'technical' },
+      'postgresql': { id: 'databases', name: 'PostgreSQL', importance: 4, category: 'technical' },
+      'mysql': { id: 'databases', name: 'MySQL', importance: 3, category: 'technical' },
+      'docker': { id: 'devops', name: 'Docker', importance: 4, category: 'technical' },
+      'kubernetes': { id: 'devops', name: 'Kubernetes', importance: 5, category: 'technical' },
+      'aws': { id: 'cloud', name: 'AWS', importance: 5, category: 'technical' },
+      'azure': { id: 'cloud', name: 'Azure', importance: 4, category: 'technical' },
+      'gcp': { id: 'cloud', name: 'Google Cloud', importance: 4, category: 'technical' }
+    };
+  }
+
+  /**
+   * Infer general programming level
+   */
+  private inferGeneralProgrammingLevel(githubAnalysis: GitHubAnalysis): number {
+    const languageCount = githubAnalysis.languages.length;
+    const frameworkCount = githubAnalysis.frameworks.length;
+    const toolCount = githubAnalysis.tools.length;
+    
+    // More languages and frameworks = higher programming level
+    const complexityScore = (languageCount * 0.4) + (frameworkCount * 0.3) + (toolCount * 0.3);
+    
+    if (complexityScore >= 8) return 4;
+    if (complexityScore >= 5) return 3;
+    if (complexityScore >= 2) return 2;
+    return 1;
+  }
+
+  /**
+   * Infer framework level
+   */
+  private inferFrameworkLevel(githubAnalysis: GitHubAnalysis): number {
+    const frameworkCount = githubAnalysis.frameworks.length;
+    const hasAdvancedFrameworks = githubAnalysis.frameworks.some(f => 
+      ['react', 'angular', 'vue', 'spring', 'django'].includes(f.toLowerCase())
+    );
+    
+    if (frameworkCount >= 3 && hasAdvancedFrameworks) return 4;
+    if (frameworkCount >= 2) return 3;
+    if (frameworkCount >= 1) return 2;
+    return 1;
+  }
+
+  /**
+   * Generate GitHub-specific recommendations
+   */
+  private generateGitHubSpecificRecommendations(githubAnalysis: GitHubAnalysis): string[] {
+    const recommendations: string[] = [];
+    
+    if (githubAnalysis.skillLevel === 'beginner') {
+      recommendations.push('Focus on mastering the fundamentals of your primary programming language');
+      recommendations.push('Practice with smaller, simpler projects before tackling complex ones');
+    } else if (githubAnalysis.skillLevel === 'intermediate') {
+      recommendations.push('Explore advanced features and patterns in your current technology stack');
+      recommendations.push('Consider contributing to open source projects to gain real-world experience');
+    } else if (githubAnalysis.skillLevel === 'advanced') {
+      recommendations.push('Share your knowledge by mentoring others or writing technical content');
+      recommendations.push('Consider exploring emerging technologies and architectural patterns');
+    }
+    
+    if (githubAnalysis.tools.includes('Docker')) {
+      recommendations.push('Learn container orchestration with Kubernetes for production deployments');
+    }
+    
+    if (githubAnalysis.frameworks.some(f => ['react', 'vue', 'angular'].includes(f.toLowerCase()))) {
+      recommendations.push('Explore state management solutions and advanced frontend patterns');
+    }
+    
+    return recommendations;
+  }
+
+  /**
+   * Fetch data from GitHub API
+   */
+  private async fetchGitHubData(url: string): Promise<any> {
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'SkillBridge-Agents'
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Repository not found or is private');
+      }
+      if (response.status === 403) {
+        throw new Error('GitHub API rate limit exceeded. Please try again later.');
+      }
+      if (response.status === 401) {
+        throw new Error('Unauthorized access to repository');
+      }
+      throw new Error(`GitHub API error: ${response.status} - ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Extract technologies from repository data
+   */
+  private extractTechnologies(repoData: any, languagesData: any, contentsData: any): string[] {
+    const technologies: string[] = [];
+    
+    // Add primary languages
+    const primaryLanguages = Object.keys(languagesData).slice(0, 5);
+    technologies.push(...primaryLanguages);
+
+    // Check for common technologies in repository description and topics
+    const description = (repoData.description || '').toLowerCase();
+    const topics = repoData.topics || [];
+    
+    const techKeywords = [
+      'react', 'vue', 'angular', 'svelte',
+      'nodejs', 'express', 'fastapi', 'django', 'spring',
+      'mongodb', 'postgresql', 'mysql', 'redis',
+      'docker', 'kubernetes', 'aws', 'azure', 'gcp',
+      'typescript', 'javascript', 'python', 'java', 'c#', 'go', 'rust',
+      'nextjs', 'nuxt', 'sveltekit', 'gatsby',
+      'tailwind', 'bootstrap', 'material-ui', 'chakra'
+    ];
+
+    techKeywords.forEach(tech => {
+      if (description.includes(tech) || topics.includes(tech)) {
+        technologies.push(tech);
+      }
+    });
+
+    return [...new Set(technologies)]; // Remove duplicates
+  }
+
+  /**
+   * Extract frameworks from repository contents
+   */
+  private extractFrameworks(contentsData: any, languagesData: any): string[] {
+    const frameworks: string[] = [];
+    
+    if (!Array.isArray(contentsData)) return frameworks;
+
+    // Look for configuration files to detect frameworks
+    const configFiles = contentsData.map((file: any) => file.name);
+    const languages = Object.keys(languagesData);
+    
+    // JavaScript/TypeScript frameworks
+    if (languages.includes('JavaScript') || languages.includes('TypeScript')) {
+      frameworks.push('Node.js');
+      if (languages.includes('TypeScript')) {
+        frameworks.push('TypeScript');
+      }
+      
+      // Check for specific JS frameworks
+      if (configFiles.some((file: string) => file.includes('react'))) {
+        frameworks.push('React');
+      }
+      if (configFiles.some((file: string) => file.includes('vue'))) {
+        frameworks.push('Vue.js');
+      }
+      if (configFiles.some((file: string) => file.includes('angular'))) {
+        frameworks.push('Angular');
+      }
+      if (configFiles.some((file: string) => file.includes('next'))) {
+        frameworks.push('Next.js');
+      }
+    }
+    
+    // Java frameworks
+    if (languages.includes('Java')) {
+      // Check for Spring Boot indicators
+      if (configFiles.includes('pom.xml') || configFiles.includes('build.gradle')) {
+        frameworks.push('Spring Framework');
+        frameworks.push('Spring Boot');
+      }
+      
+      // Check for other Java frameworks
+      if (configFiles.some((file: string) => file.includes('hibernate'))) {
+        frameworks.push('Hibernate');
+      }
+      if (configFiles.some((file: string) => file.includes('maven'))) {
+        frameworks.push('Maven');
+      }
+      if (configFiles.some((file: string) => file.includes('gradle'))) {
+        frameworks.push('Gradle');
+      }
+    }
+    
+    // Python frameworks
+    if (languages.includes('Python')) {
+      frameworks.push('Python');
+      
+      if (configFiles.includes('requirements.txt')) {
+        frameworks.push('pip');
+      }
+      if (configFiles.some((file: string) => file.includes('django'))) {
+        frameworks.push('Django');
+      }
+      if (configFiles.some((file: string) => file.includes('flask'))) {
+        frameworks.push('Flask');
+      }
+      if (configFiles.some((file: string) => file.includes('fastapi'))) {
+        frameworks.push('FastAPI');
+      }
+    }
+    
+    // Go frameworks
+    if (languages.includes('Go')) {
+      frameworks.push('Go');
+      if (configFiles.includes('go.mod')) {
+        frameworks.push('Go Modules');
+      }
+    }
+    
+    // Rust frameworks
+    if (languages.includes('Rust')) {
+      frameworks.push('Rust');
+      if (configFiles.includes('Cargo.toml')) {
+        frameworks.push('Cargo');
+      }
+    }
+
+    return [...new Set(frameworks)]; // Remove duplicates
+  }
+
+  /**
+   * Extract tools from repository contents
+   */
+  private extractTools(contentsData: any): string[] {
+    const tools: string[] = [];
+    
+    if (!Array.isArray(contentsData)) return tools;
+
+    // Look for common tool configuration files
+    const toolFiles = contentsData.map((file: any) => file.name);
+    
+    if (toolFiles.includes('docker-compose.yml') || toolFiles.includes('Dockerfile')) {
+      tools.push('Docker');
+    }
+    
+    if (toolFiles.includes('.github')) {
+      tools.push('GitHub Actions');
+    }
+    
+    if (toolFiles.includes('jest.config.js') || toolFiles.includes('vitest.config.ts')) {
+      tools.push('Jest/Vitest');
+    }
+    
+    if (toolFiles.includes('eslint.config.js') || toolFiles.includes('.eslintrc')) {
+      tools.push('ESLint');
+    }
+    
+    if (toolFiles.includes('prettier.config.js') || toolFiles.includes('.prettierrc')) {
+      tools.push('Prettier');
+    }
+
+    return tools;
+  }
+
+  /**
+   * Determine skill level based on repository complexity
+   */
+  private determineSkillLevel(repoData: any, languagesData: any, contentsData: any): 'beginner' | 'intermediate' | 'advanced' {
+    const languageCount = Object.keys(languagesData).length;
+    const fileCount = Array.isArray(contentsData) ? contentsData.length : 0;
+    const stars = repoData.stargazers_count || 0;
+    const forks = repoData.forks_count || 0;
+    
+    // Simple heuristic based on repository metrics
+    if (languageCount >= 5 || fileCount >= 100 || stars >= 100) {
+      return 'advanced';
+    } else if (languageCount >= 3 || fileCount >= 50 || stars >= 10) {
+      return 'intermediate';
+    } else {
+      return 'beginner';
+    }
+  }
+
+  /**
+   * Generate technology-specific recommendations
+   */
+  private generateTechnologyRecommendations(languages: string[], frameworks: string[], technologies: string[]): string[] {
+    const recommendations: string[] = [];
+    
+    // Language-specific recommendations
+    if (languages.includes('Java')) {
+      recommendations.push('Master Spring Boot and Spring Security for enterprise development');
+      recommendations.push('Learn Maven or Gradle for dependency management');
+      recommendations.push('Practice design patterns and SOLID principles');
+    }
+    
+    if (languages.includes('Python')) {
+      recommendations.push('Explore Django or FastAPI for web development');
+      recommendations.push('Learn pandas and numpy for data science');
+      recommendations.push('Practice with virtual environments and pip');
+    }
+    
+    if (languages.includes('JavaScript') || languages.includes('TypeScript')) {
+      recommendations.push('Master modern ES6+ features and async programming');
+      recommendations.push('Learn a frontend framework like React, Vue, or Angular');
+      recommendations.push('Understand Node.js and server-side JavaScript');
+    }
+    
+    if (languages.includes('Go')) {
+      recommendations.push('Learn Go modules and package management');
+      recommendations.push('Master goroutines and channels for concurrency');
+      recommendations.push('Explore popular Go frameworks like Gin or Echo');
+    }
+    
+    if (languages.includes('Rust')) {
+      recommendations.push('Master ownership and borrowing concepts');
+      recommendations.push('Learn Cargo and the Rust ecosystem');
+      recommendations.push('Practice with async programming in Rust');
+    }
+
+    // Framework-specific recommendations
+    if (frameworks.includes('Spring Framework')) {
+      recommendations.push('Learn Spring Boot auto-configuration and starters');
+      recommendations.push('Master Spring Data JPA for database operations');
+      recommendations.push('Understand Spring Security for authentication');
+    }
+
+    // General recommendations
+    if (recommendations.length === 0) {
+      recommendations.push('Focus on mastering the primary programming language');
+      recommendations.push('Learn version control best practices with Git');
+      recommendations.push('Practice writing clean, maintainable code');
+      recommendations.push('Explore testing frameworks and write unit tests');
+    }
+
+    return recommendations.slice(0, 5); // Limit to 5 recommendations
+  }
+
+  /**
+   * Generate skill-specific recommendations
+   */
+  private generateSkillRecommendations(skill: Skill, gap: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (gap > 0) {
+      switch (skill.id) {
+        case 'programming':
+          recommendations.push('Practice coding daily with platforms like LeetCode or HackerRank');
+          recommendations.push('Build personal projects to apply programming concepts');
+          recommendations.push('Contribute to open source projects');
+          break;
+        case 'frameworks':
+          recommendations.push('Follow official documentation and tutorials');
+          recommendations.push('Build a complete project using the framework');
+          recommendations.push('Join community forums and attend meetups');
+          break;
+        case 'communication':
+          recommendations.push('Practice presenting technical concepts to non-technical audiences');
+          recommendations.push('Join Toastmasters or similar public speaking groups');
+          recommendations.push('Write technical blog posts or documentation');
+          break;
+        case 'leadership':
+          recommendations.push('Take on mentoring opportunities');
+          recommendations.push('Lead small projects or initiatives');
+          recommendations.push('Read leadership books and apply concepts');
+          break;
+        default:
+          recommendations.push('Find online courses and tutorials');
+          recommendations.push('Practice through hands-on projects');
+          recommendations.push('Seek feedback from experienced professionals');
+      }
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Generate general recommendations based on skill gaps
+   */
+  private generateGeneralRecommendations(skillGaps: SkillGap[]): string[] {
+    const recommendations: string[] = [];
+    const topGaps = skillGaps.slice(0, 3);
+
+    if (topGaps.length > 0) {
+      recommendations.push(`Focus on your top 3 skill gaps: ${topGaps.map(gap => gap.skill.name).join(', ')}`);
+    }
+
+    const technicalGaps = skillGaps.filter(gap => gap.skill.category === 'technical');
+    if (technicalGaps.length > 0) {
+      recommendations.push('Consider enrolling in technical courses or bootcamps');
+      recommendations.push('Build a portfolio showcasing your technical skills');
+    }
+
+    const softSkillGaps = skillGaps.filter(gap => gap.skill.category === 'soft');
+    if (softSkillGaps.length > 0) {
+      recommendations.push('Join professional networking groups and communities');
+      recommendations.push('Seek mentorship opportunities');
+    }
+
+    recommendations.push('Set up a learning schedule and track your progress');
+    recommendations.push('Regularly reassess your skills and adjust your learning path');
+
+    return recommendations;
+  }
+
+  /**
+   * Generate a structured learning path
+   */
+  private generateLearningPath(skillGaps: SkillGap[]): string[] {
+    const learningPath: string[] = [];
+    const priorityGaps = skillGaps.filter(gap => gap.priority > 10).slice(0, 5);
+
+    learningPath.push('Phase 1: Foundation (Weeks 1-4)');
+    priorityGaps.slice(0, 2).forEach(gap => {
+      learningPath.push(`- Focus on ${gap.skill.name}: ${gap.recommendations[0]}`);
+    });
+
+    if (priorityGaps.length > 2) {
+      learningPath.push('Phase 2: Development (Weeks 5-8)');
+      priorityGaps.slice(2, 4).forEach(gap => {
+        learningPath.push(`- Develop ${gap.skill.name}: ${gap.recommendations[0]}`);
+      });
+    }
+
+    if (priorityGaps.length > 4) {
+      learningPath.push('Phase 3: Mastery (Weeks 9-12)');
+      priorityGaps.slice(4).forEach(gap => {
+        learningPath.push(`- Master ${gap.skill.name}: ${gap.recommendations[0]}`);
+      });
+    }
+
+    learningPath.push('Phase 4: Application (Ongoing)');
+    learningPath.push('- Apply skills in real-world projects');
+    learningPath.push('- Seek feedback and continue learning');
+
+    return learningPath;
+  }
+
+  /**
+   * Get default skill categories for initial assessment
+   */
+  getDefaultSkillCategories(): SkillCategory[] {
+    return this.skillCategories.map(category => ({
+      ...category,
+      skills: category.skills.map(skill => ({
+        ...skill,
+        currentLevel: 1,
+        targetLevel: skill.targetLevel
+      }))
+    }));
+  }
+
+  /**
+   * Update skill levels based on user input
+   */
+  updateSkillLevel(skillId: string, currentLevel: number, targetLevel?: number): void {
+    this.skillCategories.forEach(category => {
+      const skill = category.skills.find(s => s.id === skillId);
+      if (skill) {
+        skill.currentLevel = Math.max(1, Math.min(5, currentLevel));
+        if (targetLevel !== undefined) {
+          skill.targetLevel = Math.max(1, Math.min(5, targetLevel));
+        }
+      }
+    });
+  }
+}

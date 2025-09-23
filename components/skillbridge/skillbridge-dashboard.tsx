@@ -19,6 +19,14 @@ import {
 // Import existing components
 import ChatAssistant from "@/components/chat/chat-assistant";
 import { SanitizerDemo } from "@/components/sanitizer/sanitizer-demo";
+import { SkillAssessmentForm } from "./skill-assessment-form";
+import { GitHubAnalysisComponent } from "./github-analysis";
+import { AutomaticGapAnalysis } from "./automatic-gap-analysis";
+
+// Import new showcase components
+import { AgentShowcase } from "./agent-showcase";
+import { MultiAgentWorkflow, WORKFLOW_EXAMPLES } from "./multi-agent-workflow";
+import { AgentComparison, AGENT_COMPARISON_DATA } from "./agent-comparison";
 
 export default function SkillBridgeDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -33,9 +41,9 @@ export default function SkillBridgeDashboard() {
               <div className="flex items-center space-x-2">
                 <Shield className="h-8 w-8 text-blue-600" />
                 <div>
-                  <h1 className="text-2xl font-bold">SkillBridge Agents</h1>
+                  <h1 className="text-2xl font-bold">SkillBridge</h1>
                   <p className="text-sm text-muted-foreground">
-                    Multi-Agent Framework for Career Development
+                    Discover what you don't know you don't know
                   </p>
                 </div>
               </div>
@@ -75,11 +83,11 @@ export default function SkillBridgeDashboard() {
             </TabsTrigger>
             <TabsTrigger value="gaps" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
-              <span>Skill Gaps</span>
+              <span>Skill Analysis</span>
             </TabsTrigger>
             <TabsTrigger value="learning" className="flex items-center space-x-2">
               <BookOpen className="h-4 w-4" />
-              <span>Learning</span>
+              <span>Learning Paths</span>
             </TabsTrigger>
             <TabsTrigger value="career" className="flex items-center space-x-2">
               <Briefcase className="h-4 w-4" />
@@ -91,147 +99,249 @@ export default function SkillBridgeDashboard() {
             </TabsTrigger>
             <TabsTrigger value="chat" className="flex items-center space-x-2">
               <MessageSquare className="h-4 w-4" />
-              <span>Chat</span>
+              <span>Assistant</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-8">
+            {/* Hero Section */}
+            <div className="text-center space-y-4 py-8">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                The Unknown Unknowns of Your Career
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                We all have blind spots in our skills. What if you could discover the gaps you never knew existed? 
+                SkillBridge analyzes your work to reveal hidden opportunities for growth.
+              </p>
+              <div className="flex justify-center space-x-4 text-sm text-muted-foreground">
+                <span className="flex items-center space-x-1">
+                  <Shield className="h-4 w-4" />
+                  <span>Secure Analysis</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>GitHub Integration</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <BookOpen className="h-4 w-4" />
+                  <span>Personalized Learning</span>
+                </span>
+              </div>
+            </div>
+
+            {/* System Overview Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Agents</CardTitle>
+                  <CardTitle className="text-sm font-medium">Features</CardTitle>
                   <Shield className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">5</div>
+                  <div className="text-2xl font-bold">6</div>
                   <p className="text-xs text-muted-foreground">
-                    Sanitizer, Coordinator, Gap, Learning, Career, Progress
+                    Core capabilities for career development
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Secrets Sanitized</CardTitle>
-                  <Shield className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Analysis Tools</CardTitle>
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">2</div>
                   <p className="text-xs text-muted-foreground">
-                    All user input is automatically sanitized
+                    Automated skill and career analysis
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Learning Modules</CardTitle>
+                  <CardTitle className="text-sm font-medium">Capabilities</CardTitle>
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">25+</div>
                   <p className="text-xs text-muted-foreground">
-                    Personalized learning paths available
+                    Skills and technologies analyzed
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Career Resources</CardTitle>
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Security</CardTitle>
+                  <Shield className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">100%</div>
                   <p className="text-xs text-muted-foreground">
-                    Resume, badges, and OSS opportunities
+                    All data automatically protected
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>🛡️ Security Sanitizer Agent</CardTitle>
-                  <CardDescription>
-                    Automatically detects and sanitizes secrets before processing
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">API Keys Detection</span>
-                      <Badge variant="outline">Active</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Encryption Support</span>
-                      <Badge variant="outline">Available</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Audit Logging</span>
-                      <Badge variant="outline">Enabled</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Feature Showcases */}
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold mb-2">Core Features</h2>
+                <p className="text-muted-foreground">
+                  Powerful tools to accelerate your career development
+                </p>
+              </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>🤖 Multi-Agent System</CardTitle>
-                  <CardDescription>
-                    Specialized agents for different aspects of career development
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Coordinator Agent</span>
-                      <Badge variant="outline">Active</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Gap Analysis Agent</span>
-                      <Badge variant="outline">Ready</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Learning Agent</span>
-                      <Badge variant="outline">Ready</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Career Agent</span>
-                      <Badge variant="outline">Ready</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Progress Agent</span>
-                      <Badge variant="outline">Ready</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <AgentShowcase
+                  agentType="sanitizer"
+                  title="Data Protection"
+                  description="Keeps your sensitive information safe and secure"
+                  icon={<Shield className="h-5 w-5" />}
+                  status="active"
+                  capabilities={[
+                    "API Key Detection",
+                    "Password Sanitization", 
+                    "JWT Token Masking",
+                    "Credit Card Protection",
+                    "Email Address Masking",
+                    "GitHub URL Preservation"
+                  ]}
+                  useCases={[
+                    "Input validation before processing",
+                    "Protecting user privacy",
+                    "Compliance with data regulations",
+                    "Safe data sharing and storage"
+                  ]}
+                  demoComponent={<SanitizerDemo />}
+                />
+
+                <AgentShowcase
+                  agentType="gap_analyzer"
+                  title="Skill Analysis"
+                  description="Automatically analyze your skills and identify growth opportunities"
+                  icon={<BarChart3 className="h-5 w-5" />}
+                  status="active"
+                  capabilities={[
+                    "GitHub Repository Analysis",
+                    "Automatic Skill Inference",
+                    "Technology Detection",
+                    "Gap Identification",
+                    "Visual Skill Charts",
+                    "Personalized Recommendations"
+                  ]}
+                  useCases={[
+                    "Analyze your GitHub repositories",
+                    "Identify skill gaps automatically",
+                    "Get personalized learning recommendations",
+                    "Track skill development progress"
+                  ]}
+                  demoComponent={<AutomaticGapAnalysis />}
+                />
+
+                <AgentShowcase
+                  agentType="learning"
+                  title="Learning Paths"
+                  description="Personalized learning recommendations tailored to your goals"
+                  icon={<BookOpen className="h-5 w-5" />}
+                  status="ready"
+                  capabilities={[
+                    "Learning Path Generation",
+                    "Resource Recommendations",
+                    "Progress Tracking",
+                    "Skill-based Modules",
+                    "Adaptive Learning",
+                    "Milestone Setting"
+                  ]}
+                  useCases={[
+                    "Generate personalized learning plans",
+                    "Recommend relevant resources",
+                    "Track learning progress",
+                    "Adapt to your learning style"
+                  ]}
+                />
+
+                <AgentShowcase
+                  agentType="career"
+                  title="Career Guidance"
+                  description="Expert advice for advancing your professional journey"
+                  icon={<Briefcase className="h-5 w-5" />}
+                  status="ready"
+                  capabilities={[
+                    "Resume Analysis",
+                    "Job Matching",
+                    "Career Path Planning",
+                    "Skill Requirements",
+                    "Market Analysis",
+                    "Interview Preparation"
+                  ]}
+                  useCases={[
+                    "Analyze your resume and skills",
+                    "Find matching job opportunities",
+                    "Plan your career progression",
+                    "Prepare for interviews"
+                  ]}
+                />
+              </div>
+            </div>
+
+            {/* Workflow Demonstrations */}
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold mb-2">How It Works</h2>
+                <p className="text-muted-foreground">
+                  Watch the magic happen as our system analyzes your work and reveals hidden opportunities
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <MultiAgentWorkflow
+                  title={WORKFLOW_EXAMPLES.skillAnalysis.title}
+                  description={WORKFLOW_EXAMPLES.skillAnalysis.description}
+                  steps={WORKFLOW_EXAMPLES.skillAnalysis.steps}
+                />
+
+                <MultiAgentWorkflow
+                  title={WORKFLOW_EXAMPLES.careerDevelopment.title}
+                  description={WORKFLOW_EXAMPLES.careerDevelopment.description}
+                  steps={WORKFLOW_EXAMPLES.careerDevelopment.steps}
+                />
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <div className="text-center space-y-4 py-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+              <h3 className="text-2xl font-bold">Ready to Discover What You Don't Know?</h3>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Stop guessing about your skills. Let SkillBridge analyze your work and reveal the hidden opportunities 
+                that could accelerate your career.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <Button 
+                  size="lg" 
+                  onClick={() => setActiveTab('gaps')}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
+                  <BarChart3 className="h-5 w-5 mr-2" />
+                  Analyze My Skills
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => setActiveTab('chat')}
+                >
+                  <MessageSquare className="h-5 w-5 mr-2" />
+                  Ask Questions
+                </Button>
+              </div>
             </div>
           </TabsContent>
 
-          {/* Skill Gaps Tab */}
+          {/* Skill Analysis Tab */}
           <TabsContent value="gaps" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>📊 Skill Gap Analysis</CardTitle>
-                <CardDescription>
-                  Analyze your current skills vs target role requirements
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Skill Gap Analysis Coming Soon</h3>
-                  <p className="text-muted-foreground mb-4">
-                    This feature will provide detailed skill gap analysis with radar charts and recommendations.
-                  </p>
-                  <Button disabled>Analyze Skills</Button>
-                </div>
-              </CardContent>
-            </Card>
+            <AutomaticGapAnalysis />
           </TabsContent>
 
           {/* Learning Tab */}

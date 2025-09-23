@@ -34,6 +34,16 @@ const DEMO_EXAMPLES = [
     name: "Credit Card",
     text: "Payment info: 4532-1234-5678-9012 expires 12/25",
     description: "Contains credit card number"
+  },
+  {
+    name: "GitHub URL (Safe)",
+    text: "Check out my project: https://github.com/Bbetaverse22/ticketing-project-beta",
+    description: "GitHub URLs are preserved and not redacted"
+  },
+  {
+    name: "Mixed Content",
+    text: "My API key is sk-1234567890abcdef and my repo is https://github.com/user/project",
+    description: "API key redacted but GitHub URL preserved"
   }
 ];
 
