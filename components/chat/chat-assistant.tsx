@@ -1,6 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
+import { useChat } from "@ai-sdk/react";
+import {
+  isToolOrDynamicToolUIPart,
+  type DynamicToolUIPart,
+  type ReasoningUIPart,
+  type SourceUrlUIPart,
+  type TextUIPart,
+  type ToolUIPart,
+  type UIMessage,
+} from "ai";
 import {
   Conversation,
   ConversationContent,
@@ -21,150 +31,185 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool";
-type ChatMessage = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  sources?: Array<{
-    url: string;
-    title?: string;
-  }>;
-  toolCalls?: Array<{
-    type: string;
-    state: string;
-    input?: any;
-    output?: any;
-    errorText?: string;
-  }>;
-};
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from "@/components/ai-elements/reasoning";
+import { Response } from "@/components/ai-elements/response";
 
 export default function ChatAssistant() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { messages, sendMessage, status, error } = useChat();
 
-  console.log(messages);
+  const isLoading = status === "submitted" || status === "streaming";
 
   const handleSubmit = async (
     message: { text?: string; files?: any[] },
-    event: React.FormEvent
+    _event: React.FormEvent
   ) => {
-    if (!message.text?.trim() || isLoading) return;
-
-    // Clear the form immediately after extracting the message
-    const form = (event.target as Element)?.closest("form") as HTMLFormElement;
-    if (form) {
-      form.reset();
-    }
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: message.text,
-    };
-
-    // Create the updated messages array including the new user message
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setIsLoading(true);
+    const text = message.text?.trim();
+    if (!text || isLoading) return;
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: data.response,
-          sources: data.sources || [],
-          toolCalls: data.toolCalls || [],
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-      } else {
-        throw new Error(data.error || "Failed to get response");
-      }
-    } catch (error) {
-      const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+      await sendMessage({ text });
+    } catch (sendError) {
+      console.error("Failed to send message", sendError);
     }
+  };
+
+  const renderedMessages = useMemo(() => {
+    return messages.filter((message) => message.role !== "system");
+  }, [messages]);
+
+  const renderTextContent = (message: UIMessage) => {
+    const text = message.parts
+      .filter((part): part is TextUIPart => part.type === "text")
+      .map((part) => part.text)
+      .join("")
+      .trim();
+
+    if (!text) return null;
+
+    return (
+      <MessageContent>
+        <Response>{text}</Response>
+      </MessageContent>
+    );
+  };
+
+  const renderReasoning = (message: UIMessage) => {
+    const reasoningParts = message.parts.filter(
+      (part): part is ReasoningUIPart => part.type === "reasoning"
+    );
+
+    if (reasoningParts.length === 0) return null;
+
+    const reasoningText = reasoningParts.map((part) => part.text).join("\n\n");
+    const isStreamingReasoning = reasoningParts.some(
+      (part) => part.state === "streaming"
+    );
+
+    return (
+      <Reasoning isStreaming={isStreamingReasoning}>
+        <ReasoningTrigger />
+        <ReasoningContent>{reasoningText}</ReasoningContent>
+      </Reasoning>
+    );
+  };
+
+  type ToolLikePart = ToolUIPart | DynamicToolUIPart;
+
+  const renderTools = (message: UIMessage) => {
+    const toolParts = message.parts.filter(
+      (part): part is ToolLikePart => isToolOrDynamicToolUIPart(part)
+    );
+
+    if (toolParts.length === 0) return null;
+
+    return (
+      <div className="mt-4 space-y-2">
+        {toolParts.map((toolPart) => {
+          const toolName: string =
+            toolPart.type === "dynamic-tool"
+              ? toolPart.toolName
+              : toolPart.type.replace(/^tool-/, "");
+
+          const toolInput = "input" in toolPart ? toolPart.input : undefined;
+          const showInput =
+            toolInput !== undefined || toolPart.state === "input-streaming";
+
+          const output =
+            toolPart.state === "output-available"
+              ? toolPart.output
+              : undefined;
+
+          const errorText =
+            toolPart.state === "output-error" ? toolPart.errorText : undefined;
+
+          return (
+            <Tool
+              key={toolPart.toolCallId}
+              defaultOpen={toolPart.state === "output-available"}
+            >
+              <ToolHeader type={toolName} state={toolPart.state} />
+              <ToolContent>
+                {showInput && toolInput !== undefined && toolInput !== null && (
+                  <ToolInput input={toolInput} />
+                )}
+                {(output || errorText) && (
+                  <ToolOutput output={output} errorText={errorText} />
+                )}
+              </ToolContent>
+            </Tool>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderSources = (message: UIMessage) => {
+    const sourceParts = message.parts.filter(
+      (part): part is SourceUrlUIPart => part.type === "source-url"
+    );
+
+    if (sourceParts.length === 0) return null;
+
+    const sources = sourceParts.map((source) => ({
+      key: source.sourceId,
+      url: source.url,
+      title: source.title ?? source.url,
+    }));
+
+    if (sources.length === 0) return null;
+
+    return (
+      <div className="mt-4">
+        <Sources>
+          <SourcesTrigger count={sources.length} />
+          <SourcesContent>
+            {sources.map((source) => (
+              <Source
+                key={source.key}
+                href={source.url!}
+                title={source.title}
+              />
+            ))}
+          </SourcesContent>
+        </Sources>
+      </div>
+    );
   };
 
   return (
     <div className="flex flex-col h-full max-h-full overflow-hidden">
       <Conversation className="flex-1 h-0 overflow-hidden">
         <ConversationContent className="space-y-4">
-          {messages.length === 0 ? (
+          {renderedMessages.length === 0 ? (
             <ConversationEmptyState
               title="Start a conversation"
               description="Ask me anything and I'll help you out!"
             />
           ) : (
-            messages.map((message) => (
+            renderedMessages.map((message) => (
               <Message key={message.id} from={message.role}>
-                <MessageContent>{message.content}</MessageContent>
-
-                {/* Display tool calls if available */}
-                {message.toolCalls && message.toolCalls.length > 0 && (
-                  <div className="mt-4">
-                    {message.toolCalls.map((toolCall, index) => (
-                      <Tool
-                        key={index}
-                        defaultOpen={toolCall.state === "output-available"}
-                      >
-                        <ToolHeader
-                          type={toolCall.type as any}
-                          state={toolCall.state as any}
-                        />
-                        <ToolContent>
-                          {toolCall.input && (
-                            <ToolInput input={toolCall.input} />
-                          )}
-                          {(toolCall.output || toolCall.errorText) && (
-                            <ToolOutput
-                              output={toolCall.output}
-                              errorText={toolCall.errorText as any}
-                            />
-                          )}
-                        </ToolContent>
-                      </Tool>
-                    ))}
-                  </div>
-                )}
-
-                {/* Display sources if available */}
-                {message.sources && message.sources.length > 0 && (
-                  <div className="mt-4">
-                    <Sources>
-                      <SourcesTrigger count={message.sources.length} />
-                      <SourcesContent>
-                        {message.sources.map((source, index) => (
-                          <Source
-                            key={index}
-                            href={source.url}
-                            title={source.title || source.url}
-                          />
-                        ))}
-                      </SourcesContent>
-                    </Sources>
-                  </div>
+                {renderTextContent(message)}
+                {message.role === "assistant" && (
+                  <>
+                    {renderReasoning(message)}
+                    {renderTools(message)}
+                    {renderSources(message)}
+                  </>
                 )}
               </Message>
             ))
           )}
-          {isLoading && (
+          {error && (
             <Message from="assistant">
-              <MessageContent>Thinking...</MessageContent>
+              <MessageContent>
+                <Response>
+                  {"Sorry, I ran into an issue processing that. Please try again."}
+                </Response>
+              </MessageContent>
             </Message>
           )}
         </ConversationContent>

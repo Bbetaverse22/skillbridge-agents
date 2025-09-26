@@ -1,5 +1,4 @@
 import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
 
 export interface UserContext {
   userId?: string;
@@ -102,44 +101,20 @@ export class CoordinatorAgent {
   }
 
   /**
-   * Handle specialized agent queries (placeholder implementation)
+   * Provide shared tools available to all agents for streaming responses.
    */
-  async handleSpecializedQuery(agentType: string, messages: any[]): Promise<AgentResponse> {
-    const systemPrompt = this.getSystemPrompt(agentType);
-    
-    try {
-      const tools: any = {
-        web_search: openai.tools.webSearch({
-          searchContextSize: "low",
-        }),
-      };
-
-      const result = await generateText({
-        model: openai("gpt-4o"),
-        system: systemPrompt,
-        messages,
-        tools,
-      });
-
-      return {
-        text: result.text,
-        sources: result.sources || [],
-        toolCalls: result.steps || [],
-        agentType,
-      };
-    } catch (error) {
-      console.error(`Error in ${agentType}:`, error);
-      return {
-        text: `I'm having trouble processing your request right now. Please try again later.`,
-        agentType,
-      };
-    }
+  getTools() {
+    return {
+      web_search: openai.tools.webSearch({
+        searchContextSize: "low",
+      }),
+    } as const;
   }
 
   /**
    * Get system prompt for specialized agents
    */
-  private getSystemPrompt(agentType: string): string {
+  getSystemPrompt(agentType: string): string {
     const prompts = {
       gap_agent: `
 You are a Skill Gap Analysis Agent specializing in identifying skill gaps and providing personalized recommendations.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,12 @@ import { Progress } from '@/components/ui/progress';
 import { GitHubAnalysisComponent } from './github-analysis';
 import { AIChatAnalysis } from './ai-chat-analysis';
 import { SkillRadarChart } from './skill-radar-chart';
-import { GitHubAnalysis, GapAnalysisResult, GapAnalyzerAgent } from '@/lib/agents/gap-analyzer';
+import {
+  GitHubAnalysis,
+  GapAnalyzerAgent,
+  type GapAnalysisResult,
+  type Skill,
+} from '@/lib/agents/gap-analyzer';
 import { skillGapStorage } from '@/lib/storage/skill-gap-storage';
 import { 
   Github, 
@@ -29,47 +34,296 @@ export function AutomaticGapAnalysis() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analysisType, setAnalysisType] = useState<'github' | 'ai-chat'>('github');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([
+    'technical',
+    'soft',
+    'domain',
+  ]);
+  const gapAnalyzer = useMemo(() => new GapAnalyzerAgent(), []);
 
-  const handleGitHubAnalysisComplete = (analysis: GitHubAnalysis) => {
+  const normalizeLevel = useCallback((value: number) => {
+    if (Number.isNaN(value)) {
+      return 1;
+    }
+    return Math.min(5, Math.max(1, Math.round(value * 10) / 10));
+  }, []);
+
+  const CATEGORY_OPTIONS = useMemo(
+    () => [
+      { id: 'technical', label: 'Technical' },
+      { id: 'soft', label: 'Soft Skills' },
+      { id: 'domain', label: 'Domain Knowledge' },
+    ],
+    []
+  );
+
+  const toggleCategory = (categoryId: string) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(categoryId)) {
+        if (prev.length === 1) {
+          return prev;
+        }
+        return prev.filter((id) => id !== categoryId);
+      }
+      return [...prev, categoryId];
+    });
+  };
+
+  interface AssessmentOptions {
+    sourceGithub?: GitHubAnalysis | null;
+    sourceChat?: any;
+    finalizeProcessing?: boolean;
+  }
+
+  const handleSkillAssessmentComplete = useCallback(
+    (assessment: GapAnalysisResult, options: AssessmentOptions = {}) => {
+      const { sourceGithub, sourceChat, finalizeProcessing = true } = options;
+
+      if (sourceGithub) {
+        assessment.githubAnalysis = sourceGithub;
+      }
+      if (sourceChat) {
+        assessment.chatAnalysis = sourceChat;
+      }
+
+      setSkillAssessment(assessment);
+
+      if (finalizeProcessing) {
+        setIsProcessing(false);
+      }
+
+      if (!finalizeProcessing) {
+        return;
+      }
+
+      const analysisToStore = sourceGithub ?? assessment.githubAnalysis ?? null;
+      if (analysisToStore) {
+        const userId = 'user_123';
+        try {
+          const storageId = skillGapStorage.storeSkillGap(
+            userId,
+            analysisToStore,
+            assessment
+          );
+          console.log('✅ Skill gap analysis stored for chat access:', {
+            storageId,
+            userId,
+            repository: analysisToStore.repository,
+            skillCount: assessment.skillGaps.length,
+            overallScore: assessment.overallScore,
+          });
+        } catch (storageError) {
+          console.error('❌ Failed to store skill gap analysis:', storageError);
+        }
+      }
+    },
+    []
+  );
+
+  const handleGitHubAnalysisComplete = useCallback(async (
+    analysis: GitHubAnalysis
+  ) => {
     setGitHubAnalysis(analysis);
     setAnalysisType('github');
-  };
 
-  const handleAIChatAnalysisComplete = (analysis: any) => {
+    try {
+      const assessment = await gapAnalyzer.generateAutomaticSkillAssessment(
+        analysis,
+        { includeCategories: selectedCategories }
+      );
+      assessment.analysisType = 'github';
+      handleSkillAssessmentComplete(assessment, {
+        sourceGithub: analysis,
+      });
+    } catch (assessmentError) {
+      console.error('GitHub assessment error:', assessmentError);
+      setError('Unable to evaluate skill gaps from the repository.');
+      setIsProcessing(false);
+    }
+  }, [gapAnalyzer, selectedCategories, handleSkillAssessmentComplete]);
+
+  const createSkillsFromAIChat = useCallback((analysis: any): Skill[] => {
+    const skills: Skill[] = [];
+
+    const addSkill = (skill: Skill) => {
+      if (!skills.some((current) => current.id === skill.id)) {
+        skills.push({
+          ...skill,
+          currentLevel: normalizeLevel(skill.currentLevel),
+          targetLevel: normalizeLevel(skill.targetLevel ?? 5),
+        });
+      }
+    };
+
+    const baseLevel = analysis.skillLevel === 'advanced' ? 4 : analysis.skillLevel === 'intermediate' ? 3 : 2;
+
+    analysis.technologies?.forEach((tech: string) => {
+      addSkill({
+        id: `ai-tech-${tech}`,
+        name: tech,
+        currentLevel: baseLevel,
+        targetLevel: 5,
+        importance: 4,
+        category: 'technical',
+      });
+    });
+
+    analysis.concepts?.forEach((concept: string) => {
+      addSkill({
+        id: `ai-concept-${concept}`,
+        name: concept,
+        currentLevel: baseLevel - 1,
+        targetLevel: 5,
+        importance: 3,
+        category: 'technical',
+      });
+    });
+
+    if ((analysis.learningPatterns?.debuggingQuestions ?? 0) > 0) {
+      addSkill({
+        id: 'ai-debugging',
+        name: 'Debugging & Troubleshooting',
+        currentLevel: baseLevel,
+        targetLevel: 5,
+        importance: 4,
+        category: 'technical',
+      });
+    }
+
+    if ((analysis.learningPatterns?.learningQuestions ?? 0) > 0) {
+      addSkill({
+        id: 'ai-learning-agility',
+        name: 'Learning Agility',
+        currentLevel: baseLevel,
+        targetLevel: 5,
+        importance: 3,
+        category: 'soft',
+      });
+    }
+
+    if ((analysis.promptingSignals ?? 0) > 0) {
+      addSkill({
+        id: 'prompt-engineering',
+        name: 'Prompt Engineering',
+        currentLevel: baseLevel,
+        targetLevel: 5,
+        importance: 4,
+        category: 'technical',
+      });
+    }
+
+    if ((analysis.contextSignals ?? 0) > 0) {
+      addSkill({
+        id: 'context-engineering',
+        name: 'Context & Retrieval Practices',
+        currentLevel: baseLevel - 1,
+        targetLevel: 5,
+        importance: 3,
+        category: 'technical',
+      });
+    }
+
+    if ((analysis.questionCount ?? 0) > 0 && skills.length === 0) {
+      addSkill({
+        id: 'ai-questioning',
+        name: 'Problem Framing',
+        currentLevel: baseLevel,
+        targetLevel: 5,
+        importance: 3,
+        category: 'soft',
+      });
+    }
+
+    if (skills.length === 0) {
+      addSkill({
+        id: 'ai-overview',
+        name: 'AI Session Review',
+        currentLevel: 2,
+        targetLevel: 5,
+        importance: 2,
+        category: 'technical',
+      });
+    }
+
+    return skills;
+  }, [normalizeLevel]);
+
+  const handleAIChatAnalysisComplete = useCallback((analysis: any) => {
     setAIChatAnalysis(analysis);
     setAnalysisType('ai-chat');
-  };
 
-
-  const handleSkillAssessmentComplete = (assessment: GapAnalysisResult) => {
-    setSkillAssessment(assessment);
-    setIsProcessing(false);
-    
-    // Store the skill gap analysis for chat access
-    const analysisToStore = githubAnalysis || assessment.githubAnalysis;
-    if (analysisToStore) {
-      const userId = 'user_123'; // In a real app, this would come from auth
-      try {
-        const storageId = skillGapStorage.storeSkillGap(userId, analysisToStore, assessment);
-        console.log('✅ Skill gap analysis stored for chat access:', {
-          storageId,
-          userId,
-          repository: analysisToStore.repository,
-          skillCount: assessment.skillGaps.length,
-          overallScore: assessment.overallScore
-        });
-      } catch (error) {
-        console.error('❌ Failed to store skill gap analysis:', error);
-      }
-    } else {
-      console.warn('⚠️ No analysis available to store with skill assessment');
+    try {
+      const skills = createSkillsFromAIChat(analysis);
+      const assessment = gapAnalyzer.analyzeSkillGaps(skills, {
+        includeCategories: selectedCategories,
+      });
+      assessment.chatAnalysis = analysis;
+      assessment.analysisType = 'ai-chat';
+      handleSkillAssessmentComplete(assessment, {
+        sourceChat: analysis,
+      });
+    } catch (assessmentError) {
+      console.error('AI chat assessment error:', assessmentError);
+      setError('Unable to infer skill gaps from the chat session.');
+      setIsProcessing(false);
     }
-  };
+  }, [createSkillsFromAIChat, gapAnalyzer, selectedCategories, handleSkillAssessmentComplete]);
+
+
 
   const handleAnalysisStart = () => {
     setIsProcessing(true);
     setError(null);
   };
+
+  useEffect(() => {
+    if (isProcessing) {
+      return;
+    }
+
+    if (!selectedCategories.length) {
+      return;
+    }
+
+    const updateAssessment = async () => {
+      try {
+        if (githubAnalysis) {
+          const assessment = await gapAnalyzer.generateAutomaticSkillAssessment(
+            githubAnalysis,
+            { includeCategories: selectedCategories }
+          );
+          assessment.analysisType = 'github';
+          handleSkillAssessmentComplete(assessment, {
+            sourceGithub: githubAnalysis,
+            finalizeProcessing: false,
+          });
+        } else if (aiChatAnalysis) {
+          const skills = createSkillsFromAIChat(aiChatAnalysis);
+          const assessment = gapAnalyzer.analyzeSkillGaps(skills, {
+            includeCategories: selectedCategories,
+          });
+          assessment.chatAnalysis = aiChatAnalysis;
+          assessment.analysisType = 'ai-chat';
+          handleSkillAssessmentComplete(assessment, {
+            sourceChat: aiChatAnalysis,
+            finalizeProcessing: false,
+          });
+        }
+      } catch (updateError) {
+        console.error('Category update error:', updateError);
+      }
+    };
+
+    updateAssessment();
+  }, [
+    selectedCategories,
+    githubAnalysis,
+    aiChatAnalysis,
+    gapAnalyzer,
+    createSkillsFromAIChat,
+    handleSkillAssessmentComplete,
+    isProcessing,
+  ]);
 
   const resetAnalysis = () => {
     setGitHubAnalysis(null);
@@ -116,6 +370,29 @@ export function AutomaticGapAnalysis() {
               <span>{getProgress()}% Complete</span>
             </div>
             <Progress value={getProgress()} />
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground uppercase tracking-wide">
+                <span>Focus Categories</span>
+                <span>{selectedCategories.length} selected</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORY_OPTIONS.map(({ id, label }) => {
+                  const isSelected = selectedCategories.includes(id);
+                  return (
+                    <Button
+                      key={id}
+                      variant={isSelected ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => toggleCategory(id)}
+                      className="rounded-full"
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
             
             {/* Step Indicators */}
             <div className="flex justify-between">
@@ -173,7 +450,10 @@ export function AutomaticGapAnalysis() {
               <CardContent>
                 <GitHubAnalysisComponent
                   onAnalysisComplete={handleGitHubAnalysisComplete}
-                  onSkillAssessmentComplete={handleSkillAssessmentComplete}
+                  showContainer={false}
+                  showHeader={false}
+                  selectedCategories={selectedCategories}
+                  autoGenerateAssessment={false}
                 />
               </CardContent>
             </Card>
@@ -193,6 +473,8 @@ export function AutomaticGapAnalysis() {
                   onAnalysisComplete={handleAIChatAnalysisComplete}
                   onAnalysisStart={handleAnalysisStart}
                   isAnalyzing={isProcessing}
+                  showContainer={false}
+                  showHeader={false}
                 />
               </CardContent>
             </Card>
@@ -276,7 +558,7 @@ export function AutomaticGapAnalysis() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <h4 className="font-semibold mb-2">Questions Analyzed</h4>
                       <div className="text-2xl font-bold text-primary">{aiChatAnalysis.questionCount || 0}</div>
@@ -286,6 +568,16 @@ export function AutomaticGapAnalysis() {
                       <h4 className="font-semibold mb-2">AI Responses</h4>
                       <div className="text-2xl font-bold text-primary">{aiChatAnalysis.responseCount || 0}</div>
                       <p className="text-sm text-muted-foreground">Assistant responses</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Prompting Signals</h4>
+                      <div className="text-2xl font-bold text-primary">{aiChatAnalysis.promptingSignals || 0}</div>
+                      <p className="text-sm text-muted-foreground">Prompt engineering references</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Context Signals</h4>
+                      <div className="text-2xl font-bold text-primary">{aiChatAnalysis.contextSignals || 0}</div>
+                      <p className="text-sm text-muted-foreground">Context & retrieval mentions</p>
                     </div>
                   </div>
                   
@@ -379,31 +671,37 @@ export function AutomaticGapAnalysis() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {skillAssessment.skillGaps.slice(0, 5).map((gap, index) => (
-                  <div key={gap.skill.id} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">{gap.skill.name}</span>
-                      <Badge variant={gap.gap > 2 ? "destructive" : gap.gap > 1 ? "default" : "secondary"}>
-                        Gap: {gap.gap}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground mb-2">
-                      Current: {gap.skill.currentLevel}/5 → Target: {gap.skill.targetLevel}/5
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(gap.skill.currentLevel / 5) * 100}%` }}
-                      />
-                    </div>
-                    {gap.recommendations.length > 0 && (
-                      <div className="mt-2">
-                        <div className="text-xs font-medium text-muted-foreground mb-1">Recommendation:</div>
-                        <div className="text-xs">{gap.recommendations[0]}</div>
+                {skillAssessment.skillGaps.slice(0, 5).map((gap) => {
+                  const gapValue = (Math.round(gap.gap * 10) / 10).toFixed(1);
+                  const currentLevel = (Math.round(gap.skill.currentLevel * 10) / 10).toFixed(1);
+                  const targetLevel = (Math.round(gap.skill.targetLevel * 10) / 10).toFixed(1);
+
+                  return (
+                    <div key={`${gap.skill.id}-${gapValue}`} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{gap.skill.name}</span>
+                        <Badge variant={gap.gap > 2 ? "destructive" : gap.gap > 1 ? "default" : "secondary"}>
+                          Gap: {gapValue}
+                        </Badge>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div className="text-sm text-muted-foreground mb-2">
+                        Current: {currentLevel}/5 → Target: {targetLevel}/5
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(gap.skill.currentLevel / 5) * 100}%` }}
+                        />
+                      </div>
+                      {gap.recommendations.length > 0 && (
+                        <div className="mt-2">
+                          <div className="text-xs font-medium text-muted-foreground mb-1">Recommendation:</div>
+                          <div className="text-xs">{gap.recommendations[0]}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

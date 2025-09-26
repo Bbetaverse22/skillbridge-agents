@@ -13,7 +13,8 @@ import {
   TrendingUp, 
   MessageSquare,
   Github,
-  Settings
+  Settings,
+  FileText
 } from "lucide-react";
 
 // Import existing components
@@ -27,6 +28,7 @@ import { AutomaticGapAnalysis } from "./automatic-gap-analysis";
 import { AgentShowcase } from "./agent-showcase";
 import { MultiAgentWorkflow, WORKFLOW_EXAMPLES } from "./multi-agent-workflow";
 import { AgentComparison, AGENT_COMPARISON_DATA } from "./agent-comparison";
+import { PDFResources } from "./pdf-resources";
 
 export default function SkillBridgeDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -43,7 +45,7 @@ export default function SkillBridgeDashboard() {
                 <div>
                   <h1 className="text-2xl font-bold">SkillBridge</h1>
                   <p className="text-sm text-muted-foreground">
-                    Discover what you don't know you don't know
+                    Discover what you don't know
                   </p>
                 </div>
               </div>
@@ -76,7 +78,7 @@ export default function SkillBridgeDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
               <span>Overview</span>
@@ -96,6 +98,10 @@ export default function SkillBridgeDashboard() {
             <TabsTrigger value="progress" className="flex items-center space-x-2">
               <TrendingUp className="h-4 w-4" />
               <span>Progress</span>
+            </TabsTrigger>
+            <TabsTrigger value="resources" className="flex items-center space-x-2">
+              <FileText className="h-4 w-4" />
+              <span>Resources</span>
             </TabsTrigger>
             <TabsTrigger value="chat" className="flex items-center space-x-2">
               <MessageSquare className="h-4 w-4" />
@@ -408,6 +414,11 @@ export default function SkillBridgeDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Resources Tab */}
+          <TabsContent value="resources" className="space-y-6">
+            <PDFResources />
           </TabsContent>
 
           {/* Chat Tab */}

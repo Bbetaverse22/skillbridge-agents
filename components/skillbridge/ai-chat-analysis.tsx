@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { scrapeChatTranscript, type ChatScrapeResult } from '@/lib/analysis/chat-scraper';
 import { 
   Brain, 
   Upload, 
@@ -21,17 +22,23 @@ interface AIChatAnalysisProps {
   onAnalysisComplete: (analysis: any) => void;
   onAnalysisStart: () => void;
   isAnalyzing?: boolean;
+  showContainer?: boolean;
+  showHeader?: boolean;
 }
 
 export function AIChatAnalysis({ 
   onAnalysisComplete, 
   onAnalysisStart, 
-  isAnalyzing = false 
+  isAnalyzing = false,
+  showContainer = true,
+  showHeader = true,
 }: AIChatAnalysisProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeResult, setScrapeResult] = useState<ChatScrapeResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +56,7 @@ export function AIChatAnalysis({
 
       setSelectedFile(file);
       setError(null);
+      setScrapeResult(null);
       
       // Read file content
       const reader = new FileReader();
@@ -64,8 +72,32 @@ export function AIChatAnalysis({
     setSelectedFile(null);
     setFileContent('');
     setError(null);
+    setScrapeResult(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleScrape = () => {
+    if (!fileContent.trim()) {
+      setError('Please select a file before scraping');
+      return;
+    }
+
+    setIsScraping(true);
+    try {
+      const result = scrapeChatTranscript(fileContent);
+      setScrapeResult(result);
+      if (result.userQuestions.length === 0) {
+        setError('No user questions detected. Make sure the transcript includes question marks or speaker labels.');
+      } else {
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Chat scraping error:', err);
+      setError('Failed to parse the chat transcript. Please check the formatting.');
+    } finally {
+      setIsScraping(false);
     }
   };
 
@@ -76,12 +108,14 @@ export function AIChatAnalysis({
     }
 
     setError(null);
+    const currentScrape = scrapeResult ?? scrapeChatTranscript(fileContent);
+    setScrapeResult(currentScrape);
+
     setIsProcessing(true);
     onAnalysisStart();
 
     try {
-      // Simulate AI chat analysis
-      const analysis = await analyzeAIChatText(fileContent);
+      const analysis = await analyzeAIChatText(fileContent, currentScrape);
       onAnalysisComplete(analysis);
     } catch (err) {
       setError('Failed to analyze AI chat file. Please try again.');
@@ -91,19 +125,40 @@ export function AIChatAnalysis({
     }
   };
 
-  const analyzeAIChatText = async (text: string): Promise<any> => {
+  const analyzeAIChatText = async (text: string, scraped: ChatScrapeResult): Promise<any> => {
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Extract AI assistant responses and user questions
-    const { aiResponses, userQuestions } = extractChatParts(text);
-    
+    const questionTexts = scraped.userQuestions.map((question) => question.text);
+    const aiResponses = scraped.assistantMessages;
+
     // Analyze questions to understand learning patterns
-    const learningPatterns = analyzeLearningPatterns(userQuestions);
-    const technologies = extractTechnologiesFromQuestions(userQuestions);
-    const concepts = extractConceptsFromQuestions(userQuestions);
-    const skillLevel = inferSkillLevelFromQuestions(userQuestions);
-    const recommendations = generateQuestionBasedRecommendations(learningPatterns, technologies, concepts);
+    const learningPatterns = analyzeLearningPatterns(questionTexts);
+    const technologies = extractTechnologiesFromQuestions(questionTexts);
+    const concepts = extractConceptsFromQuestions(questionTexts);
+    const skillLevel = inferSkillLevelFromQuestions(questionTexts);
+
+    const promptIndicators = [...questionTexts, ...aiResponses].filter((segment) =>
+      /(prompt|few-shot|zero-shot|chain[-\s]?of[-\s]?thought|cot|system prompt|system message|persona|instruction tuning|prompt template)/i.test(
+        segment
+      )
+    ).length;
+
+    const contextIndicators = [...questionTexts, ...aiResponses].filter((segment) =>
+      /(context|retrieval|memory|embedding|knowledge base|vector store|ground(ing|ed)|tool call|tool use|context window)/i.test(
+        segment
+      )
+    ).length;
+
+    const recommendations = generateQuestionBasedRecommendations(
+      learningPatterns,
+      technologies,
+      concepts,
+      {
+        promptingSignals: promptIndicators,
+        contextSignals: contextIndicators,
+      }
+    );
 
     return {
       source: 'ai_chat',
@@ -112,93 +167,18 @@ export function AIChatAnalysis({
       skillLevel,
       recommendations,
       confidence: calculateConfidence(text),
-      insights: generateQuestionBasedInsights(learningPatterns, userQuestions),
+      insights: generateQuestionBasedInsights(learningPatterns, questionTexts, {
+        promptingSignals: promptIndicators,
+        contextSignals: contextIndicators,
+      }),
       learningPatterns,
-      questionCount: userQuestions.length,
-      responseCount: aiResponses.length
+      questionCount: questionTexts.length,
+      responseCount: aiResponses.length,
+      scrapeSummary: scraped.metadata,
+      sampleQuestions: scraped.userQuestions.slice(0, 10),
+      promptingSignals: promptIndicators,
+      contextSignals: contextIndicators,
     };
-  };
-
-  const extractChatParts = (text: string): { aiResponses: string[], userQuestions: string[] } => {
-    const lines = text.split('\n');
-    const aiResponses: string[] = [];
-    const userQuestions: string[] = [];
-    
-    let currentUserQuestion = '';
-    let currentAIResponse = '';
-    let isUserMessage = false;
-    let isAIMessage = false;
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      // Detect user messages (common patterns)
-      if (trimmedLine.match(/^(User|You|Human|Me):/i) || 
-          trimmedLine.match(/^Q\d*[:\-\.]/i) ||
-          trimmedLine.match(/^Question/i) ||
-          (trimmedLine.length > 0 && !trimmedLine.match(/^(Assistant|AI|Claude|ChatGPT|Bot|System):/i) && 
-           !trimmedLine.match(/^A\d*[:\-\.]/i) && 
-           !trimmedLine.match(/^Answer/i) &&
-           !trimmedLine.match(/^```/) &&
-           !trimmedLine.match(/^#/) &&
-           !trimmedLine.match(/^##/))) {
-        
-        if (isAIMessage && currentAIResponse.trim()) {
-          aiResponses.push(currentAIResponse.trim());
-          currentAIResponse = '';
-        }
-        
-        isUserMessage = true;
-        isAIMessage = false;
-        
-        if (trimmedLine.match(/^(User|You|Human|Me):/i)) {
-          currentUserQuestion += trimmedLine.replace(/^(User|You|Human|Me):\s*/i, '') + ' ';
-        } else if (trimmedLine.match(/^Q\d*[:\-\.]/i)) {
-          currentUserQuestion += trimmedLine.replace(/^Q\d*[:\-\.]\s*/i, '') + ' ';
-        } else {
-          currentUserQuestion += trimmedLine + ' ';
-        }
-      }
-      // Detect AI messages
-      else if (trimmedLine.match(/^(Assistant|AI|Claude|ChatGPT|Bot|System):/i) ||
-               trimmedLine.match(/^A\d*[:\-\.]/i) ||
-               trimmedLine.match(/^Answer/i)) {
-        
-        if (isUserMessage && currentUserQuestion.trim()) {
-          userQuestions.push(currentUserQuestion.trim());
-          currentUserQuestion = '';
-        }
-        
-        isUserMessage = false;
-        isAIMessage = true;
-        
-        if (trimmedLine.match(/^(Assistant|AI|Claude|ChatGPT|Bot|System):/i)) {
-          currentAIResponse += trimmedLine.replace(/^(Assistant|AI|Claude|ChatGPT|Bot|System):\s*/i, '') + ' ';
-        } else if (trimmedLine.match(/^A\d*[:\-\.]/i)) {
-          currentAIResponse += trimmedLine.replace(/^A\d*[:\-\.]\s*/i, '') + ' ';
-        } else {
-          currentAIResponse += trimmedLine + ' ';
-        }
-      }
-      // Continue current message
-      else if (trimmedLine.length > 0) {
-        if (isUserMessage) {
-          currentUserQuestion += trimmedLine + ' ';
-        } else if (isAIMessage) {
-          currentAIResponse += trimmedLine + ' ';
-        }
-      }
-    }
-    
-    // Add final messages
-    if (currentUserQuestion.trim()) {
-      userQuestions.push(currentUserQuestion.trim());
-    }
-    if (currentAIResponse.trim()) {
-      aiResponses.push(currentAIResponse.trim());
-    }
-    
-    return { aiResponses, userQuestions };
   };
 
   const analyzeLearningPatterns = (questions: string[]): any => {
@@ -324,8 +304,14 @@ export function AIChatAnalysis({
     }
   };
 
-  const generateQuestionBasedRecommendations = (patterns: any, technologies: string[], concepts: string[]): string[] => {
+  const generateQuestionBasedRecommendations = (
+    patterns: any,
+    technologies: string[],
+    concepts: string[],
+    options: { promptingSignals?: number; contextSignals?: number } = {}
+  ): string[] => {
     const recommendations: string[] = [];
+    const { promptingSignals = 0, contextSignals = 0 } = options;
     
     if (patterns.beginnerQuestions > patterns.intermediateQuestions) {
       recommendations.push('Focus on building foundational knowledge and practical examples');
@@ -351,11 +337,24 @@ export function AIChatAnalysis({
       recommendations.push('Focus on software engineering concepts and best practices');
     }
 
+    if (promptingSignals === 0) {
+      recommendations.push('Explore prompt engineering techniques to improve AI interaction quality');
+    }
+
+    if (contextSignals === 0) {
+      recommendations.push('Learn about context management and retrieval-augmented workflows');
+    }
+
     return recommendations;
   };
 
-  const generateQuestionBasedInsights = (patterns: any, questions: string[]): string[] => {
+  const generateQuestionBasedInsights = (
+    patterns: any,
+    questions: string[],
+    options: { promptingSignals?: number; contextSignals?: number } = {}
+  ): string[] => {
     const insights: string[] = [];
+    const { promptingSignals = 0, contextSignals = 0 } = options;
     
     if (patterns.learningQuestions > patterns.implementationQuestions) {
       insights.push('You focus more on understanding concepts than implementation');
@@ -375,6 +374,14 @@ export function AIChatAnalysis({
     
     if (questions.length > 10) {
       insights.push('You engage in extensive learning conversations');
+    }
+
+    if (promptingSignals > 0) {
+      insights.push('You actively explore prompt engineering strategies');
+    }
+
+    if (contextSignals > 0) {
+      insights.push('You consider context management and retrieval when working with AI systems');
     }
 
     return insights;
@@ -523,101 +530,122 @@ export function AIChatAnalysis({
     }
   };
 
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Brain className="h-5 w-5" />
-          <span>AI Chat Analysis</span>
-        </CardTitle>
-        <CardDescription>
-          Paste your AI coding session text to discover hidden skills and learning opportunities
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
 
-        <div className="space-y-4">
-          {/* File Upload Area */}
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.md"
-              onChange={handleFileSelect}
-              className="hidden"
-              disabled={isProcessing || isAnalyzing}
-            />
-            
-            {!selectedFile ? (
-              <div className="space-y-4">
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Upload AI Chat File</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Upload your AI coding session export (.txt or .md file)
+  const headerContent = (
+    <>
+      <div className="flex items-center space-x-2">
+        <Brain className="h-5 w-5" />
+        <span className="font-semibold">AI Chat Analysis</span>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Paste your AI coding session text to discover hidden skills and learning opportunities
+      </p>
+    </>
+  );
+
+  const analysisContent = (
+    <>
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="space-y-4">
+        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".txt,.md"
+            onChange={handleFileSelect}
+            className="hidden"
+            disabled={isProcessing || isAnalyzing}
+          />
+
+          {!selectedFile ? (
+            <div className="space-y-4">
+              <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Upload AI Chat File</h3>
+                <p className="text-muted-foreground mb-4">
+                  Upload your AI coding session export (.txt or .md file)
+                </p>
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessing || isAnalyzing}
+                  className="flex items-center space-x-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  <span>Choose File</span>
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Supported formats: .txt, .md • Max size: 5MB
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-center space-x-2">
+                <FileText className="h-8 w-8 text-green-600" />
+                <div className="text-left">
+                  <p className="font-semibold text-green-600">{selectedFile.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {(selectedFile.size / 1024).toFixed(1)} KB
                   </p>
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isProcessing || isAnalyzing}
-                    className="flex items-center space-x-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span>Choose File</span>
-                  </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Supported formats: .txt, .md • Max size: 5MB
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveFile}
+                  disabled={isProcessing || isAnalyzing}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <p>File ready for analysis</p>
+                <p className="text-xs">
+                  {fileContent.length} characters • {fileContent.split('\n').length} lines
                 </p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center space-x-2">
-                  <FileText className="h-8 w-8 text-green-600" />
-                  <div className="text-left">
-                    <p className="font-semibold text-green-600">{selectedFile.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {(selectedFile.size / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRemoveFile}
-                    disabled={isProcessing || isAnalyzing}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <p>File ready for analysis</p>
-                  <p className="text-xs">
-                    {fileContent.length} characters • {fileContent.split('\n').length} lines
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+          <MessageSquare className="h-4 w-4" />
+          <span>
+            {selectedFile 
+              ? `${fileContent.length} characters • ${fileContent.split('\n').length} lines`
+              : 'No file selected'
+            }
+          </span>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <MessageSquare className="h-4 w-4" />
-            <span>
-              {selectedFile 
-                ? `${fileContent.length} characters • ${fileContent.split('\n').length} lines`
-                : 'No file selected'
-              }
-            </span>
-          </div>
-          
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={handleScrape}
+            disabled={!fileContent.trim() || isProcessing || isAnalyzing || isScraping}
+            className="flex items-center space-x-2"
+          >
+            {isScraping ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                <span>Scraping...</span>
+              </>
+            ) : (
+              <>
+                <Lightbulb className="h-4 w-4" />
+                <span>Scrape Questions</span>
+              </>
+            )}
+          </Button>
+
           <Button 
             onClick={handleAnalyze}
             disabled={!fileContent.trim() || isProcessing || isAnalyzing}
@@ -636,34 +664,105 @@ export function AIChatAnalysis({
             )}
           </Button>
         </div>
+      </div>
 
-        {selectedFile && (
-          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-semibold text-sm mb-2 flex items-center space-x-2">
-              <Lightbulb className="h-4 w-4" />
-              <span>What we'll analyze from your file:</span>
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center space-x-2">
-                <MessageSquare className="h-3 w-3" />
-                <span>Question analysis</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Brain className="h-3 w-3" />
-                <span>Learning patterns</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Code className="h-3 w-3" />
-                <span>Technologies mentioned</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-3 w-3" />
-                <span>Skill level inference</span>
-              </div>
+      {selectedFile && (
+        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+          <h4 className="font-semibold text-sm mb-2 flex items-center space-x-2">
+            <Lightbulb className="h-4 w-4" />
+            <span>What we'll analyze from your file:</span>
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-3 w-3" />
+              <span>Question analysis</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Brain className="h-3 w-3" />
+              <span>Learning patterns</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Code className="h-3 w-3" />
+              <span>Technologies mentioned</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-3 w-3" />
+              <span>Skill level inference</span>
             </div>
           </div>
+        </div>
+      )}
+
+      {scrapeResult && (
+        <div className="space-y-3 rounded-lg border border-dashed border-muted-foreground/30 p-4">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">
+                {scrapeResult.metadata.questionCount} questions identified
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                Avg length: {scrapeResult.metadata.averageQuestionLength} words
+              </span>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Total turns detected: {scrapeResult.metadata.totalTurns}
+            </span>
+          </div>
+
+          {scrapeResult.userQuestions.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No questions were detected in the transcript. Try labeling speaker roles (e.g. "User:" / "Assistant:") or adding question marks.
+            </p>
+          ) : (
+            <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+              {scrapeResult.userQuestions.slice(0, 10).map((question, index) => (
+                <div
+                  key={`${question.text}-${index}`}
+                  className="rounded-md border border-muted-foreground/10 bg-muted/30 p-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">Question {index + 1}</span>
+                    <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
+                      {question.type}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-sm leading-snug">{question.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  if (showContainer) {
+    return (
+      <Card className="w-full">
+        {showHeader && (
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Brain className="h-5 w-5" />
+              <span>AI Chat Analysis</span>
+            </CardTitle>
+            <CardDescription>
+              Paste your AI coding session text to discover hidden skills and learning opportunities
+            </CardDescription>
+          </CardHeader>
         )}
-      </CardContent>
-    </Card>
+        <CardContent className="space-y-4">{analysisContent}</CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {showHeader && (
+        <div className="space-y-1">
+          {headerContent}
+        </div>
+      )}
+      {analysisContent}
+    </div>
   );
 }

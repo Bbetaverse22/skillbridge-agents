@@ -42,6 +42,13 @@ export interface GapAnalysisResult {
 }
 
 export class GapAnalyzerAgent {
+  private clampSkillLevel(level: number): number {
+    if (Number.isNaN(level)) {
+      return 1;
+    }
+    return Math.min(5, Math.max(1, Math.round(level * 10) / 10));
+  }
+
   private skillCategories: SkillCategory[] = [
     {
       id: 'technical',
@@ -49,10 +56,12 @@ export class GapAnalyzerAgent {
       skills: [
         { id: 'programming', name: 'Programming Languages', currentLevel: 1, targetLevel: 5, importance: 5, category: 'technical' },
         { id: 'frameworks', name: 'Frameworks & Libraries', currentLevel: 1, targetLevel: 5, importance: 5, category: 'technical' },
-        { id: 'databases', name: 'Database Management', currentLevel: 1, targetLevel: 4, importance: 4, category: 'technical' },
-        { id: 'cloud', name: 'Cloud Platforms', currentLevel: 1, targetLevel: 4, importance: 4, category: 'technical' },
-        { id: 'devops', name: 'DevOps & CI/CD', currentLevel: 1, targetLevel: 3, importance: 3, category: 'technical' },
-        { id: 'testing', name: 'Testing & QA', currentLevel: 1, targetLevel: 4, importance: 4, category: 'technical' },
+        { id: 'databases', name: 'Database Management', currentLevel: 1, targetLevel: 5, importance: 4, category: 'technical' },
+        { id: 'cloud', name: 'Cloud Platforms', currentLevel: 1, targetLevel: 5, importance: 4, category: 'technical' },
+        { id: 'devops', name: 'DevOps & CI/CD', currentLevel: 1, targetLevel: 5, importance: 3, category: 'technical' },
+        { id: 'testing', name: 'Testing & QA', currentLevel: 1, targetLevel: 5, importance: 4, category: 'technical' },
+        { id: 'prompt-engineering', name: 'Prompt Engineering', currentLevel: 1, targetLevel: 5, importance: 4, category: 'technical' },
+        { id: 'context-engineering', name: 'Context & Retrieval Practices', currentLevel: 1, targetLevel: 5, importance: 3, category: 'technical' },
       ]
     },
     {
@@ -60,20 +69,20 @@ export class GapAnalyzerAgent {
       name: 'Soft Skills',
       skills: [
         { id: 'communication', name: 'Communication', currentLevel: 1, targetLevel: 5, importance: 5, category: 'soft' },
-        { id: 'leadership', name: 'Leadership', currentLevel: 1, targetLevel: 4, importance: 4, category: 'soft' },
+        { id: 'leadership', name: 'Leadership', currentLevel: 1, targetLevel: 5, importance: 4, category: 'soft' },
         { id: 'problem-solving', name: 'Problem Solving', currentLevel: 1, targetLevel: 5, importance: 5, category: 'soft' },
-        { id: 'teamwork', name: 'Teamwork', currentLevel: 1, targetLevel: 4, importance: 4, category: 'soft' },
-        { id: 'time-management', name: 'Time Management', currentLevel: 1, targetLevel: 4, importance: 4, category: 'soft' },
+        { id: 'teamwork', name: 'Teamwork', currentLevel: 1, targetLevel: 5, importance: 4, category: 'soft' },
+        { id: 'time-management', name: 'Time Management', currentLevel: 1, targetLevel: 5, importance: 4, category: 'soft' },
       ]
     },
     {
       id: 'domain',
       name: 'Domain Knowledge',
       skills: [
-        { id: 'industry', name: 'Industry Knowledge', currentLevel: 1, targetLevel: 4, importance: 4, category: 'domain' },
-        { id: 'business', name: 'Business Acumen', currentLevel: 1, targetLevel: 3, importance: 3, category: 'domain' },
-        { id: 'architecture', name: 'System Architecture', currentLevel: 1, targetLevel: 4, importance: 4, category: 'domain' },
-        { id: 'security', name: 'Security Best Practices', currentLevel: 1, targetLevel: 4, importance: 4, category: 'domain' },
+        { id: 'industry', name: 'Industry Knowledge', currentLevel: 1, targetLevel: 5, importance: 4, category: 'domain' },
+        { id: 'business', name: 'Business Acumen', currentLevel: 1, targetLevel: 5, importance: 3, category: 'domain' },
+        { id: 'architecture', name: 'System Architecture', currentLevel: 1, targetLevel: 5, importance: 4, category: 'domain' },
+        { id: 'security', name: 'Security Best Practices', currentLevel: 1, targetLevel: 5, importance: 4, category: 'domain' },
       ]
     }
   ];
@@ -81,29 +90,80 @@ export class GapAnalyzerAgent {
   /**
    * Analyze skill gaps based on current and target skill levels
    */
-  analyzeSkillGaps(skills: Skill[]): GapAnalysisResult {
-    const skillGaps: SkillGap[] = [];
-    let totalGap = 0;
-    let totalPossibleGap = 0;
+  analyzeSkillGaps(
+    skills: Skill[],
+    options: { includeCategories?: string[] } = {}
+  ): GapAnalysisResult {
+    const includeSet = options.includeCategories?.length
+      ? new Set(options.includeCategories)
+      : null;
 
-    // Calculate gaps for each skill
-    skills.forEach(skill => {
-      const gap = skill.targetLevel - skill.currentLevel;
-      const priority = gap * skill.importance;
-      
-      skillGaps.push({
-        skill,
-        gap,
-        priority,
-        recommendations: this.generateSkillRecommendations(skill, gap)
-      });
+    const skillsToProcess = (() => {
+      if (!includeSet) return skills;
+      const filtered = skills.filter((skill) => includeSet.has(skill.category));
+      return filtered.length > 0 ? filtered : skills;
+    })();
 
-      totalGap += gap * skill.importance;
-      totalPossibleGap += (5 - skill.currentLevel) * skill.importance;
+    const aggregated = new Map<string, SkillGap>();
+
+    skillsToProcess.forEach((skill) => {
+      const normalizedSkill: Skill = {
+        ...skill,
+        currentLevel: this.clampSkillLevel(skill.currentLevel),
+        targetLevel: this.clampSkillLevel(skill.targetLevel ?? 5),
+      };
+
+      const gap = Math.max(0, normalizedSkill.targetLevel - normalizedSkill.currentLevel);
+      const recommendations = this.generateSkillRecommendations(normalizedSkill, gap);
+
+      const existing = aggregated.get(normalizedSkill.id);
+
+      if (existing) {
+        const mergedSkill: Skill = {
+          ...existing.skill,
+          currentLevel: this.clampSkillLevel(
+            Math.min(existing.skill.currentLevel, normalizedSkill.currentLevel)
+          ),
+          targetLevel: this.clampSkillLevel(
+            Math.max(existing.skill.targetLevel, normalizedSkill.targetLevel)
+          ),
+        };
+
+        const mergedGap = Math.max(0, mergedSkill.targetLevel - mergedSkill.currentLevel);
+        const mergedPriority = mergedGap * mergedSkill.importance;
+
+        aggregated.set(normalizedSkill.id, {
+          skill: mergedSkill,
+          gap: mergedGap,
+          priority: mergedPriority,
+          recommendations: Array.from(
+            new Set([...existing.recommendations, ...recommendations])
+          ),
+        });
+      } else {
+        aggregated.set(normalizedSkill.id, {
+          skill: normalizedSkill,
+          gap,
+          priority: gap * normalizedSkill.importance,
+          recommendations,
+        });
+      }
     });
 
-    // Calculate overall score (0-100)
-    const overallScore = totalPossibleGap > 0 ? Math.round(((totalPossibleGap - totalGap) / totalPossibleGap) * 100) : 0;
+    const skillGaps = Array.from(aggregated.values());
+    let totalAchieved = 0;
+    let totalTarget = 0;
+
+    skillGaps.forEach((gap) => {
+      totalAchieved += gap.skill.currentLevel * gap.skill.importance;
+      totalTarget += gap.skill.targetLevel * gap.skill.importance;
+    });
+
+    const overallScore = totalTarget > 0
+      ? Math.round(
+          Math.min(1, Math.max(0, totalAchieved / totalTarget)) * 100
+        )
+      : 100;
 
     // Sort gaps by priority
     skillGaps.sort((a, b) => b.priority - a.priority);
@@ -112,10 +172,26 @@ export class GapAnalyzerAgent {
     const recommendations = this.generateGeneralRecommendations(skillGaps);
     const learningPath = this.generateLearningPath(skillGaps);
 
+    const categoryList = includeSet
+      ? this.skillCategories
+          .filter((category) => includeSet.has(category.id))
+          .map((category) => ({
+            ...category,
+            skills: category.skills.filter((skill) => includeSet.has(skill.category)),
+          }))
+      : this.skillCategories;
+
+    const uniqueSkillGaps = skillGaps.reduce<SkillGap[]>((acc, gap) => {
+      if (!acc.some((existing) => existing.skill.id === gap.skill.id)) {
+        acc.push(gap);
+      }
+      return acc;
+    }, []);
+
     return {
       overallScore,
-      skillGaps,
-      categories: this.skillCategories,
+      skillGaps: uniqueSkillGaps,
+      categories: categoryList,
       recommendations,
       learningPath
     };
@@ -173,12 +249,15 @@ export class GapAnalyzerAgent {
   /**
    * Automatically generate skill assessment from GitHub analysis
    */
-  async generateAutomaticSkillAssessment(githubAnalysis: GitHubAnalysis): Promise<GapAnalysisResult> {
+  async generateAutomaticSkillAssessment(
+    githubAnalysis: GitHubAnalysis,
+    options: { includeCategories?: string[] } = {}
+  ): Promise<GapAnalysisResult> {
     // Create skills based on discovered technologies
     const skills = this.createSkillsFromTechnologies(githubAnalysis);
     
     // Analyze skill gaps automatically
-    const analysisResult = this.analyzeSkillGaps(skills);
+    const analysisResult = this.analyzeSkillGaps(skills, options);
     
     // Enhance recommendations with GitHub-specific insights
     analysisResult.recommendations = [
@@ -236,7 +315,7 @@ export class GapAnalyzerAgent {
       id: 'programming',
       name: 'Programming Languages',
       currentLevel: this.inferGeneralProgrammingLevel(githubAnalysis),
-      targetLevel: 4,
+      targetLevel: 5,
       importance: 5,
       category: 'technical'
     });
@@ -245,7 +324,7 @@ export class GapAnalyzerAgent {
       id: 'frameworks',
       name: 'Frameworks & Libraries',
       currentLevel: this.inferFrameworkLevel(githubAnalysis),
-      targetLevel: 4,
+      targetLevel: 5,
       importance: 5,
       category: 'technical'
     });
@@ -263,7 +342,9 @@ export class GapAnalyzerAgent {
     const complexityMultiplier = this.getTechnologyComplexity(technology);
     const usageMultiplier = this.getTechnologyUsage(githubAnalysis, technology);
     
-    return Math.min(5, Math.max(1, baseLevel * complexityMultiplier * usageMultiplier));
+    return this.clampSkillLevel(
+      baseLevel * complexityMultiplier * usageMultiplier
+    );
   }
 
   /**
@@ -336,31 +417,7 @@ export class GapAnalyzerAgent {
    * Get target level for technology
    */
   private getTargetLevelForTechnology(technology: string): number {
-    // Set target levels based on technology importance
-    const targetLevels: { [key: string]: number } = {
-      'javascript': 4,
-      'typescript': 4,
-      'python': 4,
-      'java': 4,
-      'react': 4,
-      'vue': 4,
-      'angular': 4,
-      'node.js': 4,
-      'spring': 4,
-      'django': 4,
-      'flask': 3,
-      'express': 3,
-      'mongodb': 3,
-      'postgresql': 3,
-      'mysql': 3,
-      'docker': 3,
-      'kubernetes': 4,
-      'aws': 4,
-      'azure': 4,
-      'gcp': 4
-    };
-    
-    return targetLevels[technology.toLowerCase()] || 3;
+    return 5;
   }
 
   /**
@@ -368,26 +425,26 @@ export class GapAnalyzerAgent {
    */
   private getTechnologySkillMap(): { [key: string]: any } {
     return {
-      'javascript': { id: 'programming', name: 'JavaScript', importance: 5, category: 'technical' },
-      'typescript': { id: 'programming', name: 'TypeScript', importance: 5, category: 'technical' },
-      'python': { id: 'programming', name: 'Python', importance: 5, category: 'technical' },
-      'java': { id: 'programming', name: 'Java', importance: 5, category: 'technical' },
-      'react': { id: 'frameworks', name: 'React', importance: 5, category: 'technical' },
-      'vue': { id: 'frameworks', name: 'Vue.js', importance: 4, category: 'technical' },
-      'angular': { id: 'frameworks', name: 'Angular', importance: 4, category: 'technical' },
-      'node.js': { id: 'frameworks', name: 'Node.js', importance: 5, category: 'technical' },
-      'spring': { id: 'frameworks', name: 'Spring Framework', importance: 5, category: 'technical' },
-      'django': { id: 'frameworks', name: 'Django', importance: 4, category: 'technical' },
-      'flask': { id: 'frameworks', name: 'Flask', importance: 3, category: 'technical' },
-      'express': { id: 'frameworks', name: 'Express.js', importance: 4, category: 'technical' },
-      'mongodb': { id: 'databases', name: 'MongoDB', importance: 4, category: 'technical' },
-      'postgresql': { id: 'databases', name: 'PostgreSQL', importance: 4, category: 'technical' },
-      'mysql': { id: 'databases', name: 'MySQL', importance: 3, category: 'technical' },
-      'docker': { id: 'devops', name: 'Docker', importance: 4, category: 'technical' },
-      'kubernetes': { id: 'devops', name: 'Kubernetes', importance: 5, category: 'technical' },
-      'aws': { id: 'cloud', name: 'AWS', importance: 5, category: 'technical' },
-      'azure': { id: 'cloud', name: 'Azure', importance: 4, category: 'technical' },
-      'gcp': { id: 'cloud', name: 'Google Cloud', importance: 4, category: 'technical' }
+      'javascript': { id: 'tech-javascript', name: 'JavaScript', importance: 5, category: 'technical' },
+      'typescript': { id: 'tech-typescript', name: 'TypeScript', importance: 5, category: 'technical' },
+      'python': { id: 'tech-python', name: 'Python', importance: 5, category: 'technical' },
+      'java': { id: 'tech-java', name: 'Java', importance: 5, category: 'technical' },
+      'react': { id: 'framework-react', name: 'React', importance: 5, category: 'technical' },
+      'vue': { id: 'framework-vue', name: 'Vue.js', importance: 4, category: 'technical' },
+      'angular': { id: 'framework-angular', name: 'Angular', importance: 4, category: 'technical' },
+      'node.js': { id: 'framework-nodejs', name: 'Node.js', importance: 5, category: 'technical' },
+      'spring': { id: 'framework-spring', name: 'Spring Framework', importance: 5, category: 'technical' },
+      'django': { id: 'framework-django', name: 'Django', importance: 4, category: 'technical' },
+      'flask': { id: 'framework-flask', name: 'Flask', importance: 3, category: 'technical' },
+      'express': { id: 'framework-express', name: 'Express.js', importance: 4, category: 'technical' },
+      'mongodb': { id: 'database-mongodb', name: 'MongoDB', importance: 4, category: 'technical' },
+      'postgresql': { id: 'database-postgresql', name: 'PostgreSQL', importance: 4, category: 'technical' },
+      'mysql': { id: 'database-mysql', name: 'MySQL', importance: 3, category: 'technical' },
+      'docker': { id: 'devops-docker', name: 'Docker', importance: 4, category: 'technical' },
+      'kubernetes': { id: 'devops-kubernetes', name: 'Kubernetes', importance: 5, category: 'technical' },
+      'aws': { id: 'cloud-aws', name: 'AWS', importance: 5, category: 'technical' },
+      'azure': { id: 'cloud-azure', name: 'Azure', importance: 4, category: 'technical' },
+      'gcp': { id: 'cloud-gcp', name: 'Google Cloud', importance: 4, category: 'technical' }
     };
   }
 
@@ -402,10 +459,12 @@ export class GapAnalyzerAgent {
     // More languages and frameworks = higher programming level
     const complexityScore = (languageCount * 0.4) + (frameworkCount * 0.3) + (toolCount * 0.3);
     
-    if (complexityScore >= 8) return 4;
-    if (complexityScore >= 5) return 3;
-    if (complexityScore >= 2) return 2;
-    return 1;
+    let level = 1;
+    if (complexityScore >= 8) level = 5;
+    else if (complexityScore >= 5) level = 4;
+    else if (complexityScore >= 2) level = 3;
+    else if (complexityScore >= 1) level = 2;
+    return this.clampSkillLevel(level);
   }
 
   /**
@@ -417,10 +476,12 @@ export class GapAnalyzerAgent {
       ['react', 'angular', 'vue', 'spring', 'django'].includes(f.toLowerCase())
     );
     
-    if (frameworkCount >= 3 && hasAdvancedFrameworks) return 4;
-    if (frameworkCount >= 2) return 3;
-    if (frameworkCount >= 1) return 2;
-    return 1;
+    let level = 1;
+    if (frameworkCount >= 3 && hasAdvancedFrameworks) level = 5;
+    else if (frameworkCount >= 2) level = 4;
+    else if (frameworkCount >= 1) level = 3;
+    else if (frameworkCount > 0) level = 2;
+    return this.clampSkillLevel(level);
   }
 
   /**
@@ -716,6 +777,10 @@ export class GapAnalyzerAgent {
   private generateSkillRecommendations(skill: Skill, gap: number): string[] {
     const recommendations: string[] = [];
     
+    if (gap < 0.5) {
+      return [];
+    }
+
     if (gap > 0) {
       switch (skill.id) {
         case 'programming':
@@ -739,9 +804,9 @@ export class GapAnalyzerAgent {
           recommendations.push('Read leadership books and apply concepts');
           break;
         default:
-          recommendations.push('Find online courses and tutorials');
-          recommendations.push('Practice through hands-on projects');
-          recommendations.push('Seek feedback from experienced professionals');
+          recommendations.push(`Set a focused improvement goal for ${skill.name}`);
+          recommendations.push('Design a mini-project to exercise this skill in context');
+          recommendations.push('Review feedback or code reviews related to this area');
       }
     }
 
@@ -753,26 +818,30 @@ export class GapAnalyzerAgent {
    */
   private generateGeneralRecommendations(skillGaps: SkillGap[]): string[] {
     const recommendations: string[] = [];
-    const topGaps = skillGaps.slice(0, 3);
+    const impactfulGaps = skillGaps
+      .filter((gap) => gap.gap >= 1)
+      .sort((a, b) => b.priority - a.priority);
+
+    const topGaps = impactfulGaps.slice(0, 3);
 
     if (topGaps.length > 0) {
       recommendations.push(`Focus on your top 3 skill gaps: ${topGaps.map(gap => gap.skill.name).join(', ')}`);
     }
 
-    const technicalGaps = skillGaps.filter(gap => gap.skill.category === 'technical');
+    const technicalGaps = impactfulGaps.filter(gap => gap.skill.category === 'technical');
     if (technicalGaps.length > 0) {
-      recommendations.push('Consider enrolling in technical courses or bootcamps');
-      recommendations.push('Build a portfolio showcasing your technical skills');
+      recommendations.push('Invest time in advanced technical training or certifications');
+      recommendations.push('Create a project roadmap to apply the targeted technologies');
     }
 
-    const softSkillGaps = skillGaps.filter(gap => gap.skill.category === 'soft');
+    const softSkillGaps = impactfulGaps.filter(gap => gap.skill.category === 'soft');
     if (softSkillGaps.length > 0) {
-      recommendations.push('Join professional networking groups and communities');
-      recommendations.push('Seek mentorship opportunities');
+      recommendations.push('Practice soft skills through mentorship, coaching, or peer feedback sessions');
     }
 
-    recommendations.push('Set up a learning schedule and track your progress');
-    recommendations.push('Regularly reassess your skills and adjust your learning path');
+    if (impactfulGaps.length > 0) {
+      recommendations.push('Set a focused learning plan with milestones for the identified gaps');
+    }
 
     return recommendations;
   }

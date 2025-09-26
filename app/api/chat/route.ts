@@ -1,6 +1,11 @@
 import { SYSTEM_INSTRUCTIONS } from "@/components/agent/prompt";
 import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import {
+  convertToModelMessages,
+  streamText,
+  type TextUIPart,
+  type UIMessage,
+} from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizerAgent } from "@/lib/sanitizer";
 import { CoordinatorAgent } from "@/lib/agents/coordinator";
@@ -16,67 +21,94 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Server-side validation: Double-check for secrets that might have leaked through
-    const validationResults = messages.map((msg: any) => {
-      if (msg.role === 'user') {
-        const validation = sanitizerAgent.validate(msg.content);
-        if (!validation.isValid) {
-          console.warn('Server-side validation detected secrets:', validation.remainingSecrets);
-          // Sanitize the message content
-          const sanitizedResult = sanitizerAgent.sanitize(msg.content);
-          return {
-            role: msg.role,
-            content: sanitizedResult.sanitizedText,
-            originalContent: msg.content,
-            wasSanitized: sanitizedResult.isSanitized,
-            secretsFound: sanitizedResult.secretsFound,
-          };
-        }
+    const uiMessages = messages as UIMessage[];
+
+    let sanitizationApplied = false;
+
+    const sanitizedMessages = uiMessages.map((message) => {
+      if (message.role !== "user") {
+        return message;
       }
+
+      let messageSanitized = false;
+
+      const sanitizedParts = message.parts.map((part) => {
+        if (part.type !== "text") {
+          return part;
+        }
+
+        const sanitized = sanitizerAgent.sanitize(part.text);
+
+        if (sanitized.secretsFound.length > 0) {
+          console.warn(
+            "Server-side validation detected secrets:",
+            sanitized.secretsFound
+          );
+        }
+
+        if (sanitized.isSanitized) {
+          messageSanitized = true;
+        }
+
+        return {
+          ...part,
+          text: sanitized.sanitizedText,
+        } satisfies TextUIPart;
+      });
+
+      if (messageSanitized) {
+        sanitizationApplied = true;
+      }
+
       return {
-        role: msg.role,
-        content: msg.content,
+        ...message,
+        parts: sanitizedParts,
       };
     });
 
-    // Initialize Coordinator Agent
     const coordinatorAgent = new CoordinatorAgent();
 
-    // Route query to appropriate agent
-    const lastMessage = messages[messages.length - 1];
-    const routedAgent = coordinatorAgent.routeQuery(lastMessage.content, {});
+    const lastUserMessage = [...sanitizedMessages]
+      .reverse()
+      .find((msg) => msg.role === "user");
 
-    // Convert to AI SDK format
-    const aiMessages = validationResults.map((msg: any) => ({
-      role: msg.role,
-      content: msg.content,
-    }));
+    const lastUserText = lastUserMessage
+      ? lastUserMessage.parts
+          .filter((part): part is TextUIPart => part.type === "text")
+          .map((part) => part.text)
+          .join("\n")
+          .trim()
+      : "";
 
-    // Generate response based on routed agent
-    let result;
-    if (routedAgent === 'coordinator') {
-      // Handle general queries with Coordinator Agent
-      result = await generateText({
-        model: openai("gpt-4o"),
-        system: SYSTEM_INSTRUCTIONS,
-        messages: aiMessages,
-        tools: {
-          web_search: openai.tools.webSearch({
-            searchContextSize: "low",
-          }),
-        },
-      });
-    } else {
-      // Route to specialized agent
-      result = await coordinatorAgent.handleSpecializedQuery(routedAgent, aiMessages);
-    }
+    const routedAgent = coordinatorAgent.routeQuery(lastUserText, {});
 
-    return NextResponse.json({
-      response: result.text,
-      sources: result.sources || [],
-      toolCalls: result.toolCalls || [],
-      routedAgent,
-      sanitizationApplied: validationResults.some((msg: any) => msg.wasSanitized),
+    const systemPrompt =
+      routedAgent === "coordinator"
+        ? SYSTEM_INSTRUCTIONS
+        : coordinatorAgent.getSystemPrompt(routedAgent);
+
+    const modelMessages = convertToModelMessages(sanitizedMessages);
+
+    const tools = coordinatorAgent.getTools();
+
+    const result = await streamText({
+      model: openai("gpt-4o"),
+      system: systemPrompt,
+      messages: modelMessages,
+      tools,
+    });
+
+    return result.toUIMessageStreamResponse({
+      sendReasoning: true,
+      sendSources: true,
+      messageMetadata: () => ({
+        routedAgent,
+        sanitizationApplied,
+      }),
+      onError: (streamError) => {
+        console.error("Chat stream error:", streamError);
+        return "The assistant encountered a streaming issue.";
+      },
     });
   } catch (error) {
     console.error("Chat API error:", error);
