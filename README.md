@@ -1,14 +1,15 @@
 # 🚀 SkillBridge Agents
 
-A comprehensive Next.js application that combines advanced security sanitization with a multi-agent framework for career development and skill building. Built with TypeScript, AI SDK 5, and modern security practices.
+A RAG-enabled Next.js application that pairs a multi-agent assistant with Vectorize-backed retrieval to support career development and skill building. Built with TypeScript, AI SDK 5, and modern security practices.
 
 ## ✨ Features
 
-### 🛡️ Security Sanitizer Agent
-- **Real-time Secret Detection**: Automatically detects API keys, passwords, personal info, and more
-- **Client-side Sanitization**: Strips/masks secrets before any network calls
-- **Multi-layer Security**: Client-side + server-side validation
-- **Visual Feedback**: Clear indicators and warnings for detected secrets
+### 🔍 Vectorized Knowledge Base
+- **Vectorize RAG Pipeline**: Retrieve context-aware sources for assistant responses
+- **Firecrawl-Friendly**: Ingest docs from the web for richer knowledge
+- **Structured Sources**: Surface citations and snippets alongside answers
+- **Server Abstraction**: Vectorize service wrapper and `/api/research` endpoint
+- **Current Coverage**: Seeded with React “Thinking in React” and TypeScript handbook content
 
 ### 🤖 Multi-Agent Framework
 - **Coordinator Agent**: Routes queries to appropriate specialized agents
@@ -18,11 +19,10 @@ A comprehensive Next.js application that combines advanced security sanitization
 - **Progress Tracking Agent**: Tracks learning progress and provides analytics
 
 ### 🎨 Modern UI & Experience
-- **Interactive Dashboard**: Comprehensive SkillBridge dashboard with multiple tabs
-- **Multi-Agent Chat**: Chat interface that routes to specialized agents
-- **Real-time Sanitization**: All user input automatically sanitized
+- **Assistant-First Dashboard**: Chat always available with contextual tabs
+- **Multi-Agent Chat**: Coordinated responses from specialized agents
+- **Tailwind + shadcn/ui**: Consistent design system with flexible layout
 - **TypeScript**: Full type safety and better developer experience
-- **Modern UI**: Built with shadcn/ui and Tailwind CSS
 
 ## 🚀 Quick Start
 
@@ -49,9 +49,12 @@ A comprehensive Next.js application that combines advanced security sanitization
    cp .env.example .env.local
    ```
    
-   Edit `.env.local` and add your OpenAI API key:
+   Edit `.env.local` and add your API keys:
    ```env
    OPENAI_API_KEY=your_openai_api_key_here
+   VECTORIZE_ORG_ID=your_vectorize_org_id
+   VECTORIZE_PIPELINE_ID=your_vectorize_pipeline_id
+   VECTORIZE_ACCESS_TOKEN=your_vectorize_access_token
    ```
 
 4. **Start development server**
@@ -60,27 +63,23 @@ A comprehensive Next.js application that combines advanced security sanitization
    ```
 
 5. **Open your browser**
-   - Main app: http://localhost:3000
-   - Demo page: http://localhost:3000/demo
+- App: http://localhost:3000 (Next.js will pick a free port if needed)
 
 ## 🧪 Testing
 
 ### Multi-Agent Dashboard
-Visit the main app at `http://localhost:3000` to access the full SkillBridge Agents dashboard with:
-- **Overview Tab**: System status and agent information
-- **Skill Gaps Tab**: Analyze your skills and identify gaps
-- **Learning Tab**: Get personalized learning paths
-- **Career Tab**: Resume optimization and job search tools
-- **Progress Tab**: Track your learning progress
-- **Chat Tab**: Multi-agent chat with intelligent routing
+Visit the main app to explore the assistant-centric dashboard with:
+- **Skill Analysis Tab**: Automatic GitHub-based gap analysis
+- **Learning Tab**: Planned personalized learning paths
+- **Career Tab**: Upcoming resume and opportunity tools
+- **Progress Tab**: Future progress tracking modules
+- **Assistant Tab**: Multi-agent chat with knowledge base retrieval
 
-### Interactive Demo
-Visit `/demo` to test the sanitizer with pre-built examples:
-- API Keys (OpenAI, AWS, GitHub)
-- Database connection strings
-- Personal information (SSN, email, phone)
-- Credit card numbers
-- JWT tokens
+### Knowledge Retrieval Demo
+Seed your Vectorize pipeline (e.g. via Firecrawl) and ask the assistant targeted questions:
+- “Show me the official React docs on hooks.”
+- “Summarize the TypeScript handbook on generics.”
+- “What does the Node.js fs module support?”
 
 ### Multi-Agent Testing
 Try these examples in the chat to see different agents in action:
@@ -109,13 +108,9 @@ Show me my learning progress
 What skills have I improved this month?
 ```
 
-### Security Testing
-Test the sanitizer with sensitive data:
-```
-My API key is sk-1234567890abcdef1234567890abcdef1234567890abcdef
-Database: mongodb://user:password123@localhost:27017/mydb
-Contact: john.doe@example.com, Phone: (555) 123-4567
-```
+### Retrieval Testing
+Monitor `POST /api/chat` responses—tool calls include `knowledge_base` payloads with `sources`.
+- Default knowledge base content focuses on React and TypeScript; ingest more sources via Firecrawl for broader coverage.
 
 ## 🔧 Configuration
 
@@ -137,24 +132,25 @@ const routedAgent = coordinator.routeQuery(userQuery, context);
 ```env
 # Required
 OPENAI_API_KEY=your_openai_api_key_here
+VECTORIZE_ORG_ID=your_vectorize_org_id
+VECTORIZE_PIPELINE_ID=your_vectorize_pipeline_id
+VECTORIZE_ACCESS_TOKEN=your_vectorize_access_token
 
 # Optional
-SANITIZER_STRICT_MODE=true
-SANITIZER_ENABLE_MASKING=true
-SANITIZER_ENABLE_STRIPPING=false
+# NEXT_PUBLIC_* vars for client-side configuration
 ```
 
 ### Agent Responsibilities
-- **🛡️ Sanitizer Agent**: Real-time secret detection and sanitization
 - **🤖 Coordinator Agent**: Intelligent query routing and orchestration
 - **📊 Gap Analysis Agent**: Skill gap analysis, GitHub repo analysis, code review
 - **📚 Learning Agent**: Personalized learning paths, course recommendations
 - **💼 Career Agent**: Resume optimization, job search, portfolio building
 - **📈 Progress Agent**: Learning analytics, progress tracking, achievements
+- **🧠 Knowledge Base Tool**: Vectorize-backed retrieval for grounded answers
 
 ### Components
-- **SkillBridgeDashboard**: Main multi-agent interface with 6 tabs
-- **ChatAssistant**: Multi-agent chat interface with routing
-- **SanitizerAgent**: Core detection and sanitization logic
+- **SkillBridgeDashboard**: Assistant-first interface with contextual tabs
+- **ChatAssistant**: Multi-agent chat with tool streaming
+- **VectorizeService**: Abstraction over Vectorize pipelines for retrieval
 - **CoordinatorAgent**: Query routing and agent orchestration
 - **SpecializedAgents**: Domain-specific AI agents for career development

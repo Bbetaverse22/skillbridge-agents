@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   isToolOrDynamicToolUIPart,
   type DynamicToolUIPart,
   type ReasoningUIPart,
-  type SourceUrlUIPart,
   type TextUIPart,
   type ToolUIPart,
   type UIMessage,
@@ -17,13 +16,7 @@ import {
   ConversationEmptyState,
 } from "@/components/ai-elements/conversation";
 import { Message, MessageContent } from "@/components/ai-elements/message";
-import { SanitizerPromptInput } from "@/components/sanitizer/sanitizer-prompt-input";
-import {
-  Sources,
-  SourcesTrigger,
-  SourcesContent,
-  Source,
-} from "@/components/ai-elements/sources";
+import { PromptInput, PromptInputBody, PromptInputTextarea, PromptInputToolbar, PromptInputSubmit } from "@/components/ai-elements/prompt-input";
 import {
   Tool,
   ToolHeader,
@@ -40,18 +33,24 @@ import { Response } from "@/components/ai-elements/response";
 
 export default function ChatAssistant() {
   const { messages, sendMessage, status, error } = useChat();
+  const [inputValue, setInputValue] = useState("");
 
   const isLoading = status === "submitted" || status === "streaming";
 
+  const loggedKnowledgeBaseStates = useRef(new Set<string>());
+
   const handleSubmit = async (
     message: { text?: string; files?: any[] },
-    _event: React.FormEvent
+    event: React.FormEvent
   ) => {
-    const text = message.text?.trim();
+    event?.preventDefault?.();
+
+    const text = (message.text ?? inputValue).trim();
     if (!text || isLoading) return;
 
     try {
       await sendMessage({ text });
+      setInputValue("");
     } catch (sendError) {
       console.error("Failed to send message", sendError);
     }
@@ -147,38 +146,48 @@ export default function ChatAssistant() {
     );
   };
 
-  const renderSources = (message: UIMessage) => {
-    const sourceParts = message.parts.filter(
-      (part): part is SourceUrlUIPart => part.type === "source-url"
-    );
+  useEffect(() => {
+    for (const message of messages) {
+      const parts = Array.isArray(message.parts) ? message.parts : [];
+      const toolParts = parts.filter((part): part is ToolLikePart =>
+        isToolOrDynamicToolUIPart(part)
+      );
 
-    if (sourceParts.length === 0) return null;
+      for (const toolPart of toolParts) {
+        const toolName =
+          toolPart.type === "dynamic-tool"
+            ? toolPart.toolName
+            : toolPart.type.replace(/^tool-/, "");
 
-    const sources = sourceParts.map((source) => ({
-      key: source.sourceId,
-      url: source.url,
-      title: source.title ?? source.url,
-    }));
+        if (toolName !== "knowledge_base") {
+          continue;
+        }
 
-    if (sources.length === 0) return null;
+        const callId = toolPart.toolCallId ?? `${message.id}-${toolName}`;
+        const stateKey = `${callId}:${toolPart.state ?? "unknown"}`;
 
-    return (
-      <div className="mt-4">
-        <Sources>
-          <SourcesTrigger count={sources.length} />
-          <SourcesContent>
-            {sources.map((source) => (
-              <Source
-                key={source.key}
-                href={source.url!}
-                title={source.title}
-              />
-            ))}
-          </SourcesContent>
-        </Sources>
-      </div>
-    );
-  };
+        if (loggedKnowledgeBaseStates.current.has(stateKey)) {
+          continue;
+        }
+
+        loggedKnowledgeBaseStates.current.add(stateKey);
+
+        const toolInput = "input" in toolPart ? toolPart.input : undefined;
+        const output =
+          toolPart.state === "output-available" ? toolPart.output : undefined;
+        const errorText =
+          toolPart.state === "output-error" ? toolPart.errorText : undefined;
+
+        console.log("[SkillBridge][KnowledgeBase]", {
+          toolCallId: callId,
+          state: toolPart.state,
+          input: toolInput,
+          output,
+          errorText,
+        });
+      }
+    }
+  }, [messages]);
 
   return (
     <div className="flex flex-col h-full max-h-full overflow-hidden">
@@ -197,7 +206,6 @@ export default function ChatAssistant() {
                   <>
                     {renderReasoning(message)}
                     {renderTools(message)}
-                    {renderSources(message)}
                   </>
                 )}
               </Message>
@@ -216,11 +224,23 @@ export default function ChatAssistant() {
       </Conversation>
 
       <div className="p-4 flex-shrink-0">
-        <SanitizerPromptInput
-          onSubmit={handleSubmit}
-          placeholder="What would you like to know? (Secrets will be automatically sanitized)"
-          disabled={isLoading}
-        />
+        <PromptInput onSubmit={handleSubmit}>
+          <PromptInputBody>
+            <PromptInputTextarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="What would you like to know?"
+              disabled={isLoading}
+              className="min-h-[80px]"
+            />
+            <PromptInputToolbar>
+              <PromptInputSubmit
+                status={isLoading ? "submitted" : undefined}
+                disabled={isLoading || !inputValue.trim()}
+              />
+            </PromptInputToolbar>
+          </PromptInputBody>
+        </PromptInput>
       </div>
     </div>
   );

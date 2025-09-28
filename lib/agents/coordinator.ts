@@ -1,4 +1,6 @@
+import { jsonSchema, tool } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { VectorizeService } from "@/lib/retrieval";
 
 export interface UserContext {
   userId?: string;
@@ -12,7 +14,17 @@ export interface AgentResponse {
   agentType: string;
 }
 
+const vectorizeSingleton = (() => {
+  try {
+    return new VectorizeService();
+  } catch (error) {
+    console.error("Failed to initialize VectorizeService", error);
+    return null;
+  }
+})();
+
 export class CoordinatorAgent {
+
   /**
    * Route user queries to appropriate specialized agents
    */
@@ -49,9 +61,9 @@ export class CoordinatorAgent {
       return 'gap_agent';
     }
     
-    // Skill gap analysis keywords
-    if (lowerQuery.includes('skill gap') || 
-        lowerQuery.includes('assessment') || 
+    // Technical and skill-related keywords - route to gap_agent for specialized knowledge
+    if (lowerQuery.includes('skill gap') ||
+        lowerQuery.includes('assessment') ||
         lowerQuery.includes('analyze my skills') ||
         lowerQuery.includes('what am i missing') ||
         lowerQuery.includes('code analysis') ||
@@ -61,7 +73,31 @@ export class CoordinatorAgent {
         lowerQuery.includes('frameworks') ||
         lowerQuery.includes('programming languages') ||
         lowerQuery.includes('languages used') ||
-        lowerQuery.includes('what technologies')) {
+        lowerQuery.includes('what technologies') ||
+        // Programming language and framework specific questions
+        lowerQuery.includes('react') ||
+        lowerQuery.includes('javascript') ||
+        lowerQuery.includes('typescript') ||
+        lowerQuery.includes('python') ||
+        lowerQuery.includes('java') ||
+        lowerQuery.includes('node.js') ||
+        lowerQuery.includes('express') ||
+        lowerQuery.includes('django') ||
+        lowerQuery.includes('flask') ||
+        lowerQuery.includes('spring') ||
+        lowerQuery.includes('angular') ||
+        lowerQuery.includes('vue') ||
+        // Development concepts
+        lowerQuery.includes('component') ||
+        lowerQuery.includes('function') ||
+        lowerQuery.includes('class') ||
+        lowerQuery.includes('variable') ||
+        lowerQuery.includes('loop') ||
+        lowerQuery.includes('condition') ||
+        lowerQuery.includes('api') ||
+        lowerQuery.includes('database') ||
+        lowerQuery.includes('testing') ||
+        lowerQuery.includes('debug')) {
       return 'gap_agent';
     }
     
@@ -104,11 +140,50 @@ export class CoordinatorAgent {
    * Provide shared tools available to all agents for streaming responses.
    */
   getTools() {
-    return {
+    const tools: any = {
       web_search: openai.tools.webSearch({
         searchContextSize: "low",
       }),
-    } as const;
+    };
+
+    // Always include knowledge_base tool for all agents
+    if (vectorizeSingleton) {
+      tools.knowledge_base = tool({
+        description:
+          "Retrieve supporting knowledge from the SkillBridge Vectorize pipeline",
+        name: "knowledge_base",
+        inputSchema: jsonSchema({
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            query: {
+              type: "string",
+              description:
+                "Natural language query describing the information need",
+            },
+            topK: {
+              type: "number",
+              minimum: 1,
+              maximum: 20,
+              description: "Maximum number of documents to retrieve (default 5)",
+            },
+          },
+          required: ["query"],
+        }),
+        execute: async ({ query, topK }: { query: string; topK?: number }) => {
+          const documents = await vectorizeSingleton!.retrieveDocuments(query, {
+            topK,
+          });
+
+          return {
+            context: vectorizeSingleton!.buildContext(documents),
+            sources: vectorizeSingleton!.toChatSources(documents),
+          };
+        },
+      });
+    }
+
+    return tools as const;
   }
 
   /**
@@ -223,6 +298,8 @@ Provide clear, actionable insights based on progress data.
 
     return prompts[agentType as keyof typeof prompts] || `
 You are a specialized agent within the SkillBridge multi-agent platform. Your role is to provide expert guidance in your specific domain while working collaboratively with other agents to deliver comprehensive career development solutions.
+
+For technical questions about programming, frameworks, or development concepts, you have access to a knowledge base of technical documentation and can provide specific, actionable guidance.
 
 Always provide practical, actionable advice tailored to the user's specific needs and career goals.
 `;

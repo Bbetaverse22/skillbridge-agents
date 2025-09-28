@@ -7,7 +7,6 @@ import {
   type UIMessage,
 } from "ai";
 import { NextRequest, NextResponse } from "next/server";
-import { sanitizerAgent } from "@/lib/sanitizer";
 import { CoordinatorAgent } from "@/lib/agents/coordinator";
 
 export async function POST(request: NextRequest) {
@@ -23,52 +22,9 @@ export async function POST(request: NextRequest) {
 
     const uiMessages = messages as UIMessage[];
 
-    let sanitizationApplied = false;
-
-    const sanitizedMessages = uiMessages.map((message) => {
-      if (message.role !== "user") {
-        return message;
-      }
-
-      let messageSanitized = false;
-
-      const sanitizedParts = message.parts.map((part) => {
-        if (part.type !== "text") {
-          return part;
-        }
-
-        const sanitized = sanitizerAgent.sanitize(part.text);
-
-        if (sanitized.secretsFound.length > 0) {
-          console.warn(
-            "Server-side validation detected secrets:",
-            sanitized.secretsFound
-          );
-        }
-
-        if (sanitized.isSanitized) {
-          messageSanitized = true;
-        }
-
-        return {
-          ...part,
-          text: sanitized.sanitizedText,
-        } satisfies TextUIPart;
-      });
-
-      if (messageSanitized) {
-        sanitizationApplied = true;
-      }
-
-      return {
-        ...message,
-        parts: sanitizedParts,
-      };
-    });
-
     const coordinatorAgent = new CoordinatorAgent();
 
-    const lastUserMessage = [...sanitizedMessages]
+    const lastUserMessage = [...uiMessages]
       .reverse()
       .find((msg) => msg.role === "user");
 
@@ -87,7 +43,7 @@ export async function POST(request: NextRequest) {
         ? SYSTEM_INSTRUCTIONS
         : coordinatorAgent.getSystemPrompt(routedAgent);
 
-    const modelMessages = convertToModelMessages(sanitizedMessages);
+    const modelMessages = convertToModelMessages(uiMessages);
 
     const tools = coordinatorAgent.getTools();
 
@@ -103,7 +59,6 @@ export async function POST(request: NextRequest) {
       sendSources: true,
       messageMetadata: () => ({
         routedAgent,
-        sanitizationApplied,
       }),
       onError: (streamError) => {
         console.error("Chat stream error:", streamError);
