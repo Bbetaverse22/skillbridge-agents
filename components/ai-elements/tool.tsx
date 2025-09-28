@@ -16,6 +16,7 @@ import {
   WrenchIcon,
   XCircleIcon,
 } from "lucide-react";
+import { isValidElement } from "react";
 import type { ComponentProps, ReactNode } from "react";
 import { CodeBlock } from "./code-block";
 
@@ -123,10 +124,16 @@ export const ToolOutput = ({
 
   let Output = <div>{output as ReactNode}</div>;
 
-  if (typeof output === "object" && output !== null) {
-    Output = (
-      <CodeBlock code={JSON.stringify(output, null, 2)} language="json" />
-    );
+  if (isValidElement(output)) {
+    Output = <>{output}</>;
+  } else if (typeof output === "object" && output !== null) {
+    if (isKnowledgeBaseResult(output)) {
+      Output = <KnowledgeBaseResult {...output} />;
+    } else {
+      Output = (
+        <CodeBlock code={JSON.stringify(output, null, 2)} language="json" />
+      );
+    }
   } else if (typeof output === "string") {
     Output = <CodeBlock code={output} language="json" />;
   }
@@ -147,6 +154,105 @@ export const ToolOutput = ({
         {errorText && <div>{errorText}</div>}
         {Output}
       </div>
+    </div>
+  );
+};
+
+type KnowledgeBaseResultShape = {
+  context?: string;
+  sources?: Array<{
+    id: string;
+    title: string;
+    url?: string;
+    snippet?: string;
+  }>;
+};
+
+const isKnowledgeBaseResult = (value: any): value is KnowledgeBaseResultShape => {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (typeof value.context === "string" || Array.isArray(value.sources))
+  );
+};
+
+const KnowledgeBaseResult = ({ context, sources }: KnowledgeBaseResultShape) => {
+  const sections = (context ?? "")
+    .split("\n\n---\n\n")
+    .map((section) => section.trim())
+    .filter(Boolean);
+
+  // Check if this is a synthesized answer (starts with "Based on")
+  const isSynthesizedAnswer = sections.length > 0 && sections[0].startsWith("Based on");
+
+  return (
+    <div className="space-y-4 text-sm">
+      {sections.length > 0 && (
+        <div className="space-y-3">
+          <h5 className="font-medium text-muted-foreground uppercase tracking-wide text-xs">
+            {isSynthesizedAnswer ? "Answer" : "Context"}
+          </h5>
+          <div className={cn(
+            "rounded-md border p-4",
+            isSynthesizedAnswer
+              ? "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
+              : "bg-muted/40"
+          )}>
+            {sections.map((section, index) => (
+              <div key={index} className="space-y-3">
+                <div className="leading-snug whitespace-pre-wrap">
+                  {section}
+                </div>
+                {index < sections.length - 1 && (
+                  <hr className="border-muted-foreground/20" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {Array.isArray(sources) && sources.length > 0 && (
+        <div className="space-y-3">
+          <h5 className="font-medium text-muted-foreground uppercase tracking-wide text-xs">
+            Sources ({sources.length})
+          </h5>
+          <ul className="space-y-2 rounded-md border bg-muted/30 p-3">
+            {sources.map((source, index) => (
+              <li key={source.id || index} className="space-y-1">
+                <div className="flex items-start gap-2">
+                  <span className="text-xs text-muted-foreground mt-0.5">
+                    {index + 1}.
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-foreground">
+                      {source.title}
+                    </div>
+                    {source.url && (
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-primary underline underline-offset-2 hover:text-primary/80"
+                      >
+                        {source.url}
+                      </a>
+                    )}
+                    {source.snippet && (
+                      <p className="text-xs text-muted-foreground whitespace-pre-wrap mt-1">
+                        {source.snippet.length > 150
+                          ? `${source.snippet.slice(0, 150)}...`
+                          : source.snippet
+                        }
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

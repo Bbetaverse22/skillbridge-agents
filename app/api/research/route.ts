@@ -46,7 +46,6 @@ export async function POST(request: NextRequest) {
   try {
     const documents = await vectorizeService.retrieveDocuments(body.query, {
       topK: body.topK,
-      filter: body.filter,
     });
 
     const context = vectorizeService.buildContext(documents);

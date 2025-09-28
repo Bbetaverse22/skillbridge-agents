@@ -1,4 +1,4 @@
-import { jsonSchema, tool } from "ai";
+import { jsonSchema, tool, type ToolSet } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { VectorizeService } from "@/lib/retrieval";
 
@@ -22,6 +22,15 @@ const vectorizeSingleton = (() => {
     return null;
   }
 })();
+
+const KNOWLEDGE_BASE_KEYWORDS = [
+  "react",
+  "typescript",
+  "type script",
+  "ts",
+  "jsx",
+  "tsx",
+];
 
 export class CoordinatorAgent {
 
@@ -140,7 +149,7 @@ export class CoordinatorAgent {
    * Provide shared tools available to all agents for streaming responses.
    */
   getTools() {
-    const tools: any = {
+    const tools: ToolSet = {
       web_search: openai.tools.webSearch({
         searchContextSize: "low",
       }),
@@ -171,19 +180,29 @@ export class CoordinatorAgent {
           required: ["query"],
         }),
         execute: async ({ query, topK }: { query: string; topK?: number }) => {
+          const normalizedQuery = query.toLowerCase();
+
+          const matchesKnowledgeBase = KNOWLEDGE_BASE_KEYWORDS.some((keyword) =>
+            normalizedQuery.includes(keyword)
+          );
+
+          if (!matchesKnowledgeBase) {
+            return { context: "", sources: [] };
+          }
+
           const documents = await vectorizeSingleton!.retrieveDocuments(query, {
             topK,
           });
 
           return {
-            context: vectorizeSingleton!.buildContext(documents),
+            context: vectorizeSingleton!.buildContext(documents, query),
             sources: vectorizeSingleton!.toChatSources(documents),
           };
         },
       });
     }
 
-    return tools as const;
+    return tools;
   }
 
   /**
