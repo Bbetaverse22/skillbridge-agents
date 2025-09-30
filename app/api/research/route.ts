@@ -44,12 +44,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const documents = await vectorizeService.retrieveDocuments(body.query, {
+    const { context, sources } = await vectorizeService.search(body.query, {
       topK: body.topK,
+      filter: body.filter,
     });
-
-    const context = vectorizeService.buildContext(documents);
-    const sources = vectorizeService.toChatSources(documents);
 
     const response: KnowledgeBaseResponse = {
       content: context,
@@ -66,4 +64,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

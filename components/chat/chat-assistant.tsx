@@ -31,8 +31,18 @@ import {
 } from "@/components/ai-elements/reasoning";
 import { Response } from "@/components/ai-elements/response";
 
-export default function ChatAssistant() {
-  const { messages, sendMessage, status, error } = useChat();
+type ChatAssistantProps = {
+  api?: string;
+};
+
+export default function ChatAssistant({ api }: ChatAssistantProps = {}) {
+  const { messages, sendMessage, status, error } = useChat(
+    api
+      ? {
+          id: `chat-${api}`,
+        }
+      : undefined
+  );
   const [inputValue, setInputValue] = useState("");
 
   const isLoading = status === "submitted" || status === "streaming";
@@ -201,13 +211,13 @@ export default function ChatAssistant() {
           ) : (
             renderedMessages.map((message) => (
               <Message key={message.id} from={message.role}>
-                {renderTextContent(message)}
                 {message.role === "assistant" && (
                   <>
-                    {renderReasoning(message)}
                     {renderTools(message)}
+                    {renderReasoning(message)}
                   </>
                 )}
+                {renderTextContent(message)}
               </Message>
             ))
           )}

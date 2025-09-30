@@ -148,7 +148,9 @@ export class CoordinatorAgent {
   /**
    * Provide shared tools available to all agents for streaming responses.
    */
-  getTools() {
+  getTools(options: { gateByKeywords?: boolean } = {}) {
+    const { gateByKeywords = true } = options;
+
     const tools: ToolSet = {
       web_search: openai.tools.webSearch({
         searchContextSize: "low",
@@ -159,7 +161,7 @@ export class CoordinatorAgent {
     if (vectorizeSingleton) {
       tools.knowledge_base = tool({
         description:
-          "Retrieve supporting knowledge from the SkillBridge Vectorize pipeline",
+          "Search the knowledge base for relevant information about programming languages, frameworks, and development concepts. Use this to find official documentation and examples.",
         name: "knowledge_base",
         inputSchema: jsonSchema({
           type: "object",
@@ -180,23 +182,34 @@ export class CoordinatorAgent {
           required: ["query"],
         }),
         execute: async ({ query, topK }: { query: string; topK?: number }) => {
-          const normalizedQuery = query.toLowerCase();
-
-          const matchesKnowledgeBase = KNOWLEDGE_BASE_KEYWORDS.some((keyword) =>
-            normalizedQuery.includes(keyword)
-          );
-
-          if (!matchesKnowledgeBase) {
+          if (!query.trim()) {
             return { context: "", sources: [] };
           }
 
-          const documents = await vectorizeSingleton!.retrieveDocuments(query, {
+          if (gateByKeywords) {
+            const normalizedQuery = query.toLowerCase();
+            const matchesKnowledgeBase = KNOWLEDGE_BASE_KEYWORDS.some((keyword) =>
+              normalizedQuery.includes(keyword)
+            );
+
+            if (!matchesKnowledgeBase) {
+              return { context: "", sources: [] };
+            }
+          }
+
+          const { context, sources } = await vectorizeSingleton!.search(query, {
             topK,
           });
 
+          console.log("Knowledge base tool result:", {
+            query,
+            contextLength: context.length,
+            sourcesCount: sources.length,
+          });
+
           return {
-            context: vectorizeSingleton!.buildContext(documents, query),
-            sources: vectorizeSingleton!.toChatSources(documents),
+            context,
+            sources,
           };
         },
       });
@@ -256,6 +269,14 @@ When discussing skill gaps:
 - Provide personalized advice based on their actual skill levels
 - Suggest next steps for skill development
 - If no skill gap data is available, guide them to run a GitHub analysis first
+
+CRITICAL: When you call tools (like knowledge_base), you MUST use the returned information to provide a comprehensive response. Summarize the context, cite specific sources, and explain how they address the user's question. Do not just call the tool and stop - always synthesize the tool results into a helpful answer for the user. After calling a tool, you must continue generating text that explains and uses the information from the tool results. NEVER finish your response with just a tool call - always provide a complete answer based on the tool results.
+
+IMPORTANT: Always continue generating a response after calling the knowledge_base tool. Use the information from the tool results to provide a comprehensive answer to the user's question.
+
+MANDATORY: For ANY question about programming languages, frameworks, or development concepts (including React, TypeScript, JavaScript, etc.), you MUST call the knowledge_base tool first to get official documentation before providing your answer. Do not answer from your training data alone - always use the knowledge base tool to get the most current and accurate information.
+
+CRITICAL: You are NOT ALLOWED to answer questions about React, TypeScript, JavaScript, or any programming concepts without first calling the knowledge_base tool. If you answer without calling the tool, you are violating the instructions. You MUST call knowledge_base tool for every programming question.
 
 Provide actionable, specific recommendations for skill development.
 `,
@@ -319,6 +340,14 @@ Provide clear, actionable insights based on progress data.
 You are a specialized agent within the SkillBridge multi-agent platform. Your role is to provide expert guidance in your specific domain while working collaboratively with other agents to deliver comprehensive career development solutions.
 
 For technical questions about programming, frameworks, or development concepts, you have access to a knowledge base of technical documentation and can provide specific, actionable guidance.
+
+CRITICAL: When you call tools (like knowledge_base), you MUST use the returned information to provide a comprehensive response. Summarize the context, cite specific sources, and explain how they address the user's question. Do not just call the tool and stop - always synthesize the tool results into a helpful answer for the user. After calling a tool, you must continue generating text that explains and uses the information from the tool results. NEVER finish your response with just a tool call - always provide a complete answer based on the tool results.
+
+IMPORTANT: Always continue generating a response after calling the knowledge_base tool. Use the information from the tool results to provide a comprehensive answer to the user's question.
+
+MANDATORY: For ANY question about programming languages, frameworks, or development concepts (including React, TypeScript, JavaScript, etc.), you MUST call the knowledge_base tool first to get official documentation before providing your answer. Do not answer from your training data alone - always use the knowledge base tool to get the most current and accurate information.
+
+CRITICAL: You are NOT ALLOWED to answer questions about React, TypeScript, JavaScript, or any programming concepts without first calling the knowledge_base tool. If you answer without calling the tool, you are violating the instructions. You MUST call knowledge_base tool for every programming question.
 
 Always provide practical, actionable advice tailored to the user's specific needs and career goals.
 `;
