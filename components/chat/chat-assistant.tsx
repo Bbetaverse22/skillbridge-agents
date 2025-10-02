@@ -30,24 +30,67 @@ import {
   ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
 import { Response } from "@/components/ai-elements/response";
+import { Badge } from "@/components/ui/badge";
 
 type ChatAssistantProps = {
   api?: string;
+  activeTab?: string;
+  onSuggestTab?: (tab: string) => void;
 };
 
-export default function ChatAssistant({ api }: ChatAssistantProps = {}) {
-  const { messages, sendMessage, status, error } = useChat(
-    api
-      ? {
-          id: `chat-${api}`,
-        }
-      : undefined
-  );
+export default function ChatAssistant({ api, activeTab, onSuggestTab }: ChatAssistantProps = {}) {
+  const { messages, sendMessage, status, error } = useChat({
+    ...(api ? { id: `chat-${api}` } : {}),
+  });
   const [inputValue, setInputValue] = useState("");
 
   const isLoading = status === "submitted" || status === "streaming";
 
   const loggedKnowledgeBaseStates = useRef(new Set<string>());
+
+  // Helper function to get agent display name
+  const getAgentDisplayName = (agent: string): string => {
+    const agentNames: Record<string, string> = {
+      'gap_agent': '📊 Skill Analyzer',
+      'github_agent': '🐙 GitHub Expert',
+      'learning_agent': '📚 Learning Guide',
+      'career_agent': '💼 Career Coach',
+      'progress_agent': '📈 Progress Tracker',
+      'coordinator': '🤖 Assistant',
+    };
+    return agentNames[agent] || '🤖 Assistant';
+  };
+
+  // Helper function to map agent to suggested tab
+  const mapAgentToTab = (agent: string): string => {
+    const tabMapping: Record<string, string> = {
+      'gap_agent': 'gaps',
+      'github_agent': 'gaps',
+      'learning_agent': 'learning',
+      'career_agent': 'career',
+      'progress_agent': 'progress',
+    };
+    return tabMapping[agent] || 'chat';
+  };
+
+  // Handle tab suggestions from agent responses
+  useEffect(() => {
+    if (!onSuggestTab || messages.length === 0) return;
+
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role === 'assistant' && lastMessage.metadata) {
+      const metadata = lastMessage.metadata as any;
+      const routedAgent = metadata.routedAgent;
+      
+      if (routedAgent && activeTab === 'chat') {
+        const suggestedTab = mapAgentToTab(routedAgent);
+        if (suggestedTab !== 'chat' && suggestedTab !== activeTab) {
+          // Optionally auto-navigate (disabled by default)
+          // onSuggestTab(suggestedTab);
+        }
+      }
+    }
+  }, [messages, onSuggestTab, activeTab]);
 
   const handleSubmit = async (
     message: { text?: string; files?: any[] },
@@ -59,7 +102,12 @@ export default function ChatAssistant({ api }: ChatAssistantProps = {}) {
     if (!text || isLoading) return;
 
     try {
-      await sendMessage({ text });
+      await sendMessage({ 
+        text,
+        metadata: {
+          tabContext: activeTab,
+        }
+      });
       setInputValue("");
     } catch (sendError) {
       console.error("Failed to send message", sendError);
@@ -209,17 +257,29 @@ export default function ChatAssistant({ api }: ChatAssistantProps = {}) {
               description="Ask me anything and I'll help you out!"
             />
           ) : (
-            renderedMessages.map((message) => (
-              <Message key={message.id} from={message.role}>
-                {message.role === "assistant" && (
-                  <>
-                    {renderTools(message)}
-                    {renderReasoning(message)}
-                  </>
-                )}
-                {renderTextContent(message)}
-              </Message>
-            ))
+            renderedMessages.map((message) => {
+              const metadata = message.metadata as any;
+              const routedAgent = metadata?.routedAgent;
+              
+              return (
+                <Message key={message.id} from={message.role}>
+                  {message.role === "assistant" && routedAgent && (
+                    <div className="mb-2">
+                      <Badge variant="outline" className="text-xs">
+                        {getAgentDisplayName(routedAgent)}
+                      </Badge>
+                    </div>
+                  )}
+                  {message.role === "assistant" && (
+                    <>
+                      {renderTools(message)}
+                      {renderReasoning(message)}
+                    </>
+                  )}
+                  {renderTextContent(message)}
+                </Message>
+              );
+            })
           )}
           {error && (
             <Message from="assistant">

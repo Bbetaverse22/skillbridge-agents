@@ -15,7 +15,6 @@ import {
   type GapAnalysisResult,
   type Skill,
 } from '@/lib/agents/gap-analyzer';
-import { skillGapStorage } from '@/lib/storage/skill-gap-storage';
 import { 
   Github, 
   BarChart3, 
@@ -76,7 +75,7 @@ export function AutomaticGapAnalysis() {
   }
 
   const handleSkillAssessmentComplete = useCallback(
-    (assessment: GapAnalysisResult, options: AssessmentOptions = {}) => {
+    async (assessment: GapAnalysisResult, options: AssessmentOptions = {}) => {
       const { sourceGithub, sourceChat, finalizeProcessing = true } = options;
 
       if (sourceGithub) {
@@ -100,18 +99,29 @@ export function AutomaticGapAnalysis() {
       if (analysisToStore) {
         const userId = 'user_123';
         try {
-          const storageId = skillGapStorage.storeSkillGap(
-            userId,
-            analysisToStore,
-            assessment
-          );
-          console.log('✅ Skill gap analysis stored for chat access:', {
-            storageId,
-            userId,
-            repository: analysisToStore.repository,
-            skillCount: assessment.skillGaps.length,
-            overallScore: assessment.overallScore,
+          // Store on the server via API call
+          const response = await fetch('/api/skill-gaps', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              githubAnalysis: analysisToStore,
+              skillAssessment: assessment,
+            }),
           });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Skill gap analysis stored for chat access:', {
+              storageId: result.storageId,
+              userId,
+              repository: analysisToStore.repository,
+              skillCount: assessment.skillGaps.length,
+              overallScore: assessment.overallScore,
+            });
+          } else {
+            console.error('❌ Failed to store skill gap analysis:', await response.text());
+          }
         } catch (storageError) {
           console.error('❌ Failed to store skill gap analysis:', storageError);
         }

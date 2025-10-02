@@ -8,7 +8,8 @@ import { Shield, BarChart3, BookOpen, Briefcase, TrendingUp, MessageSquare, Gith
 
 // Import existing components
 import ChatAssistant from "@/components/chat/chat-assistant";
-import { AutomaticGapAnalysis } from "./automatic-gap-analysis";
+import { RedesignedSkillAssessment } from "./redesigned-skill-assessment";
+import { LearningPathsTab } from "./learning-paths-tab";
 
 export default function SkillBridgeDashboard() {
   const [activeTab, setActiveTab] = useState("chat");
@@ -32,9 +33,11 @@ export default function SkillBridgeDashboard() {
             </div>
             
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
-                <Github className="h-4 w-4 mr-2" />
-                GitHub
+              <Button variant="outline" size="sm" asChild>
+                <a href="/github-demo">
+                  <Github className="h-4 w-4 mr-2" />
+                  GitHub Demo
+                </a>
               </Button>
               <Button variant="outline" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
@@ -96,29 +99,12 @@ export default function SkillBridgeDashboard() {
 
           {/* Skill Analysis Tab */}
           <TabsContent value="gaps" className="space-y-6">
-            <AutomaticGapAnalysis />
+            <RedesignedSkillAssessment onNavigateToLearning={() => setActiveTab('learning')} />
           </TabsContent>
 
           {/* Learning Tab */}
           <TabsContent value="learning" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>📚 Learning Paths</CardTitle>
-                <CardDescription>
-                  Personalized learning modules and resources
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Learning Paths Coming Soon</h3>
-                  <p className="text-muted-foreground mb-4">
-                    This feature will provide personalized learning paths based on your skill gaps.
-                  </p>
-                  <Button disabled>Generate Learning Path</Button>
-                </div>
-              </CardContent>
-            </Card>
+            <LearningPathsTab />
           </TabsContent>
 
           {/* Career Tab */}
@@ -176,7 +162,7 @@ export default function SkillBridgeDashboard() {
               </CardHeader>
               <CardContent className="h-full">
                 <div className="h-full">
-                  <ChatAssistant />
+                  <ChatAssistant activeTab={activeTab} onSuggestTab={setActiveTab} />
                 </div>
               </CardContent>
             </Card>

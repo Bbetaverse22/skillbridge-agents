@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
   console.log("Request URL:", request.url);
   console.log("Request method:", request.method);
   try {
-    const { messages } = await request.json();
+    const body = await request.json();
+    const { messages } = body;
     console.log("Messages received:", messages.length);
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -32,6 +33,10 @@ export async function POST(request: NextRequest) {
     const lastUserMessage = [...uiMessages]
       .reverse()
       .find((msg) => msg.role === "user");
+    
+    // Extract tabContext from the last user message metadata
+    const tabContext = (lastUserMessage?.metadata as any)?.tabContext;
+    console.log("Tab context:", tabContext);
 
     const lastUserText = lastUserMessage
       ? lastUserMessage.parts
@@ -41,7 +46,8 @@ export async function POST(request: NextRequest) {
           .trim()
       : "";
 
-    const routedAgent = coordinatorAgent.routeQuery(lastUserText, {});
+    const routedAgent = coordinatorAgent.routeQuery(lastUserText, { tabContext });
+    console.log("Routed agent:", routedAgent);
 
     const systemPrompt =
       routedAgent === "coordinator"

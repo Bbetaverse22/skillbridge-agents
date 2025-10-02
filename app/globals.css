@@ -119,4 +119,44 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Link styles for better visibility - using !important to override any existing styles */
+  a {
+    @apply text-blue-500 hover:text-blue-400 underline underline-offset-2 transition-colors;
+  }
+  
+  /* Force link colors in all contexts */
+  a:not([class*="text-"]) {
+    color: #3b82f6 !important; /* blue-500 */
+  }
+  
+  a:not([class*="text-"]):hover {
+    color: #60a5fa !important; /* blue-400 */
+  }
+  
+  /* Specific targeting for user messages (dark background) */
+  .group.is-user a,
+  .group[class*="is-user"] a,
+  .is-user a {
+    color: #93c5fd !important; /* blue-300 */
+  }
+  
+  .group.is-user a:hover,
+  .group[class*="is-user"] a:hover,
+  .is-user a:hover {
+    color: #bfdbfe !important; /* blue-200 */
+  }
+  
+  /* Specific targeting for assistant messages (light background) */
+  .group.is-assistant a,
+  .group[class*="is-assistant"] a,
+  .is-assistant a {
+    color: #2563eb !important; /* blue-600 */
+  }
+  
+  .group.is-assistant a:hover,
+  .group[class*="is-assistant"] a:hover,
+  .is-assistant a:hover {
+    color: #3b82f6 !important; /* blue-500 */
+  }
 }
