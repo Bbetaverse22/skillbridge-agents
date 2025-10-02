@@ -260,12 +260,14 @@ export class CoordinatorAgent {
             const gapAnalyzer = new GapAnalyzerAgent();
             
             // Convert GitHub data to the expected format
-            const githubAnalysis = {
+            const githubAnalysis: any = {
               repository: githubData.repository?.url || 'Unknown repository',
+              technologies: [githubData.repository?.language || 'Unknown'],
               languages: [githubData.repository?.language || 'Unknown'],
               frameworks: [],
               tools: [],
-              skillLevel: githubData.skill_indicators?.project_maturity === 'mature' ? 'intermediate' : 'beginner',
+              skillLevel: (githubData.skill_indicators?.project_maturity === 'mature' ? 'intermediate' : 'beginner') as 'beginner' | 'intermediate' | 'advanced',
+              recommendations: [],
               stars: githubData.repository?.stars || 0,
               forks: githubData.repository?.forks || 0,
               createdAt: githubData.repository?.created || new Date().toISOString(),
