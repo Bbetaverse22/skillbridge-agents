@@ -14,6 +14,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GapAnalyzerAgent } from '@/lib/agents/gap-analyzer';
+import { StickyAgentStatus } from './sticky-agent-status';
+import { InteractiveSkillCard } from './interactive-skill-card';
 import { 
   Github, 
   Brain, 
@@ -69,6 +71,27 @@ export function AgenticSkillAnalyzer() {
       icon
     };
     setActionLogs(prev => [log, ...prev].slice(0, 50)); // Keep last 50 logs
+  };
+
+  const getCurrentTaskMessage = (status: AgentStatus): string => {
+    switch (status) {
+      case 'ANALYZING':
+        return 'Analyzing GitHub profile and repositories...';
+      case 'RESEARCHING':
+        return 'Conducting deep market research on job requirements...';
+      case 'PLANNING':
+        return 'Analyzing portfolio quality and generating improvement plan...';
+      case 'ACTING':
+        return 'Creating GitHub issues and improvement tasks...';
+      case 'MONITORING':
+        return 'Setting up progress tracking and monitoring...';
+      case 'COMPLETE':
+        return 'Analysis complete! Review your results below.';
+      case 'ERROR':
+        return 'An error occurred during analysis.';
+      default:
+        return 'Ready to start analysis';
+    }
   };
 
   const runAgenticWorkflow = async () => {
@@ -273,6 +296,20 @@ export function AgenticSkillAnalyzer() {
 
   return (
     <div className="space-y-6">
+      {/* Sticky Agent Status Bar */}
+      <StickyAgentStatus
+        status={agentStatus}
+        progress={progress}
+        currentTask={getCurrentTaskMessage(agentStatus)}
+        estimatedTimeRemaining="2 min"
+        onViewLogs={() => {
+          const logElement = document.getElementById('activity-log');
+          if (logElement) {
+            logElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }}
+      />
+
       {/* Hero Input Section */}
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
         <CardHeader>
@@ -356,7 +393,7 @@ export function AgenticSkillAnalyzer() {
       {actionLogs.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Column 1: Agent Action Logs */}
-          <Card>
+          <Card id="activity-log">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Activity className="h-5 w-5" />
@@ -406,30 +443,16 @@ export function AgenticSkillAnalyzer() {
             </CardHeader>
             <CardContent>
               {skillGaps.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {skillGaps.map((gap, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm">{gap.name}</span>
-                        <Badge variant={gap.priority >= 8 ? 'destructive' : gap.priority >= 6 ? 'default' : 'secondary'}>
-                          Priority: {gap.priority}/10
-                        </Badge>
-                      </div>
-                      <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${
-                            gap.priority >= 8 ? 'bg-red-500' : 
-                            gap.priority >= 6 ? 'bg-yellow-500' : 
-                            'bg-green-500'
-                          }`}
-                          style={{ width: `${(gap.gap / gap.targetLevel) * 100}%` }} 
-                        />
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Current: {gap.currentLevel}/5</span>
-                        <span>Target: {gap.targetLevel}/5</span>
-                      </div>
-                    </div>
+                    <InteractiveSkillCard
+                      key={index}
+                      skill={gap}
+                      onStartLearning={(skillName) => {
+                        console.log('Starting learning path for:', skillName);
+                        // Future: Navigate to learning resources or open modal
+                      }}
+                    />
                   ))}
                 </div>
               ) : (
