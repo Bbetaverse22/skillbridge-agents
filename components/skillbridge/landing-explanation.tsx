@@ -61,28 +61,28 @@ export function LandingExplanation() {
       </div>
 
       {/* Problem Statement */}
-      <Card className="max-w-4xl mx-auto border-2 border-destructive/20">
+      <Card className="max-w-4xl mx-auto border-2 border-orange-200 dark:border-orange-800">
         <CardContent className="p-8 space-y-4">
-          <h2 className="text-2xl font-bold">❌ The Problem</h2>
+          <h2 className="text-2xl font-bold">💡 The Challenge</h2>
           <p className="text-lg text-muted-foreground">
             Traditional career tools give you <span className="font-semibold text-foreground">reports and recommendations</span>. 
             But then what? You're left to figure out the next steps on your own.
           </p>
           <ul className="space-y-2 text-muted-foreground">
             <li className="flex items-start space-x-2">
-              <span className="text-destructive mt-1">•</span>
+              <span className="text-orange-600 mt-1">•</span>
               <span>Generic advice that doesn't match your actual GitHub portfolio</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-destructive mt-1">•</span>
+              <span className="text-orange-600 mt-1">•</span>
               <span>No real-time job market data or salary insights</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-destructive mt-1">•</span>
+              <span className="text-orange-600 mt-1">•</span>
               <span>Static recommendations that never adapt to your progress</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-destructive mt-1">•</span>
+              <span className="text-orange-600 mt-1">•</span>
               <span>You have to manually improve your portfolio yourself</span>
             </li>
           </ul>
