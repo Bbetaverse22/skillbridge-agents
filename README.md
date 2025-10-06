@@ -1,30 +1,41 @@
-# 🚀 SkillBridge Agents
+# 🚀 SkillBridge: Agentic Career Development Platform
 
-A RAG-enabled Next.js application that pairs a multi-agent assistant with Vectorize-backed retrieval to support career development and skill building. Built with TypeScript, AI SDK 5, and modern security practices.
+> **V1 Capstone Project**: Research + Action with LangGraph & MCP
 
-## ✨ Features
+An **agentic AI platform** that helps developers identify skill gaps and improve their portfolios through deep research and autonomous actions. Unlike traditional generative AI that just produces reports, SkillBridge **takes action**: analyzing GitHub profiles, creating improvement tasks, and continuously monitoring progress.
 
-### 🔍 Vectorized Knowledge Base
-- **Vectorize RAG Pipeline**: Retrieve context-aware sources for assistant responses
-- **Firecrawl-Friendly**: Ingest docs from the web for richer knowledge
-- **Structured Sources**: Surface citations and snippets alongside answers
-- **Server Abstraction**: Vectorize service wrapper and `/api/research` endpoint
-- **Current Coverage**: Seeded with React “Thinking in React” and TypeScript handbook content
+## 🎯 V1 Vision: Research + Action
 
-### 🤖 Multi-Agent Framework
-- **Coordinator Agent**: Intelligent routing to specialized agents based on query context and active tab
-- **GitHub Analysis Agent**: Analyzes GitHub profiles, repositories, and code for skill assessment
-- **Gap Analysis Agent**: Performs automatic skill gap analysis with visual radar charts and personalized recommendations
-- **Learning Path Agent**: Creates personalized learning modules with real GitHub practice issues for hands-on learning
-- **Career Development Agent**: Generates resumes, badges, and finds OSS opportunities
-- **Progress Tracking Agent**: Tracks learning progress and provides analytics
-- **Persistent Storage**: File-based skill gap storage that persists across server restarts
+SkillBridge V1 focuses on two core innovations:
+1. **Deep Research**: Real-time web scraping for job requirements, salary trends, and learning resources
+2. **Autonomous Actions**: GitHub integration that creates issues, drafts improvements, and tracks progress
 
-### 🎨 Modern UI & Experience
-- **Assistant-First Dashboard**: Chat always available with contextual tabs
-- **Multi-Agent Chat**: Coordinated responses from specialized agents
-- **Tailwind + shadcn/ui**: Consistent design system with flexible layout
-- **TypeScript**: Full type safety and better developer experience
+Built with **LangGraph** for stateful agentic workflows and **MCP (Model Context Protocol)** for standardized tool integrations.
+
+## ✨ V1 Features
+
+### 🧠 Agentic Skill Analyzer
+- **Multi-Stage Analysis**: Automatically profiles GitHub repos, detects tech stack, and generates skill gaps
+- **Deep Career Research**: Real-time scraping of job boards (LinkedIn, Indeed) for role requirements
+- **Learning Intelligence**: Finds relevant courses, documentation, and tutorials based on gaps
+- **Persistent Memory**: Stores skill profiles for continuous tracking and improvement
+
+### 🤖 Portfolio Builder Agent (LangGraph-Powered)
+- **Autonomous Improvement Loop**: Analyzes portfolio weaknesses and creates actionable tasks
+- **GitHub Integration (MCP)**: Creates issues and PRs directly in your repositories
+- **README Generation**: Drafts professional documentation for your projects
+- **Progress Monitoring**: Tracks completion and adapts recommendations
+
+### 🔗 MCP Integrations
+- **GitHub MCP**: Repository analysis, issue creation, profile enhancement
+- **Web Research MCP**: Real-time job market and learning resource discovery
+- **Extensible Architecture**: Easy to add custom MCP servers (e.g., SQL Linter)
+
+### 🎨 Modern UI
+- **Single Tab Focus**: Clean, action-oriented interface for skill analysis
+- **Real-Time Updates**: Live agent status and action logs
+- **Visual Progress**: Skill radar charts and improvement tracking
+- **TypeScript + Next.js**: Full-stack type safety with shadcn/ui components
 
 ## 🚀 Quick Start
 
@@ -73,73 +84,136 @@ A RAG-enabled Next.js application that pairs a multi-agent assistant with Vector
 5. **Open your browser**
 - App: http://localhost:3000 (Next.js will pick a free port if needed)
 
-## 💡 How It Works
+## 💡 How It Works: The Agentic Loop
 
-### Complete Skill Development Workflow
+### Phase 1: Deep Analysis (LangGraph State Machine)
+1. **GitHub Profiling**: Analyzes your repositories, tech stack, and coding patterns
+2. **Role Detection**: Automatically determines if you're a backend dev, data engineer, DevOps, etc.
+3. **Skill Gap Identification**: Compares your current skills vs. market demands
+4. **Market Intelligence**: Uses MCP to scrape real job postings for required skills
 
-1. **Skill Assessment Tab** 
-   - Paste a GitHub repository URL or username
-   - AI automatically analyzes the code, technologies, and skill level
-   - Generates comprehensive skill gap report with current vs. target skills
-   - Results stored persistently for future reference
+### Phase 2: Research & Planning
+1. **Job Market Research**: Real-time web scraping of LinkedIn, Indeed, AngelList
+2. **Salary Analysis**: Pulls compensation data for roles matching your profile
+3. **Learning Resource Discovery**: Finds tutorials, courses, and documentation
+4. **Priority Ranking**: Determines which skills have highest ROI
 
-2. **Learning Paths Tab**
-   - View personalized learning recommendations based on your skill gaps
-   - Automatically discover beginner-friendly GitHub issues to practice your skills
-   - Get hands-on learning opportunities from real open-source projects
-   - Direct links to contribute and build your portfolio
+### Phase 3: Autonomous Action (Portfolio Builder)
+1. **Weakness Detection**: Identifies repos needing improvement (missing READMEs, tests, docs)
+2. **Task Generation**: Creates GitHub issues with specific improvement steps
+3. **README Drafting**: Generates professional documentation for your projects
+4. **Progress Monitoring**: Tracks issue completion and portfolio quality
 
-3. **Assistant Chat**
-   - Ask questions about your skill gaps anytime
-   - Get personalized advice based on your actual skill assessment
-   - Access React, TypeScript, and programming documentation via RAG
-   - Context-aware responses that understand which tab you're in
-
-4. **Multi-Tab Experience**
-   - Seamless navigation between Skill Assessment, Learning Paths, and Chat
-   - Agent automatically routes queries to the right specialist
-   - Persistent skill gap data accessible from any tab
+### Phase 4: Continuous Loop
+- **Weekly Check-ins**: Re-analyzes portfolio to measure progress
+- **Adaptive Planning**: Adjusts recommendations based on completed tasks
+- **New Opportunities**: Surfaces trending technologies and emerging skill demands
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-**Minimum Required (to get started):**
+**Required for V1:**
 ```env
+# AI Model Access
 OPENAI_API_KEY=your_openai_api_key_here
-```
 
-**Optional Enhancements:**
-```env
-# RAG Knowledge Base (adds documentation search)
-VECTORIZE_ORG_ID=your_vectorize_org_id
-VECTORIZE_PIPELINE_ID=your_vectorize_pipeline_id
-VECTORIZE_ACCESS_TOKEN=your_vectorize_access_token
-
-# GitHub Token (increases API rate limits from 60/hr to 5000/hr)
+# GitHub MCP Integration (Required for Portfolio Builder)
 GITHUB_TOKEN=your_github_personal_access_token_here
-
-# Client-side configuration
-# NEXT_PUBLIC_* vars for browser-side features
 ```
 
-### GitHub Integration
+**How to get a GitHub Token:**
+1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Generate new token with these scopes:
+   - `repo` (full control for creating issues/PRs)
+   - `read:user` (for profile analysis)
+3. Add to `.env.local` as `GITHUB_TOKEN`
 
-The GitHub Analysis Agent provides powerful capabilities for skill assessment and practice:
+### MCP Architecture
 
-- **Profile Analysis**: Get user statistics, repositories, and activity patterns
-- **Repository Analysis**: Analyze specific repositories for technical depth and skills
-- **Automatic Skill Assessment**: Two-step analysis that generates comprehensive skill gap reports
-- **Repository Search**: Search repositories by technology or topic
-- **Practice Issue Discovery**: Find beginner-friendly open-source issues based on your skill gaps
-- **Code Quality Analysis**: Evaluate project maturity and community engagement
-- **Learning Paths Integration**: Automatically suggest real GitHub issues for hands-on practice
+SkillBridge V1 uses **Model Context Protocol (MCP)** for tool integrations:
 
-**GitHub Token is Optional!** All GitHub features work without authentication, but with lower rate limits:
-- **Without token**: 60 requests per hour (sufficient for testing and light usage)
-- **With token**: 5,000 requests per hour (recommended for heavy usage)
+**GitHub MCP Server** (Built-in):
+- Repository analysis and profiling
+- Issue creation for portfolio improvements
+- README generation and documentation
+- Progress tracking via GitHub API
 
-To add a token for higher limits:
-1. Go to GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)
-2. Generate a new token with `public_repo` scope (for public repositories only)
-3. Add it to your `.env.local` file as `GITHUB_TOKEN`
+**Web Research MCP** (Planned):
+- Job board scraping (LinkedIn, Indeed, AngelList)
+- Salary data aggregation
+- Learning resource discovery
+- Market trend analysis
+
+**Extensible Design**:
+- Add custom MCP servers (e.g., SQL Linter, Code Quality)
+- Standardized tool interface for easy integration
+- See `lib/agents/coordinator.ts` for MCP tool definitions
+
+### LangGraph Integration
+
+The Portfolio Builder Agent uses **LangGraph** for stateful workflows:
+- **State Management**: Tracks analysis progress, goals, and actions
+- **Conditional Routing**: Decides next steps based on current state
+- **Human-in-the-Loop**: Optional approval gates for GitHub actions
+- **Retry Logic**: Handles API failures and rate limits gracefully
+
+See `V1_DEVELOPMENT_PLAN.md` for implementation roadmap.
+
+## 🏗️ Tech Stack
+
+### Frontend
+- **Next.js 15**: React framework with App Router
+- **TypeScript**: Full type safety
+- **Tailwind CSS + shadcn/ui**: Beautiful, accessible components
+- **React**: UI library
+
+### Backend & AI
+- **AI SDK 5 (Vercel)**: Streamable AI responses and tool calling
+- **LangGraph**: Stateful agentic workflows and decision loops
+- **OpenAI GPT-4**: Language model for analysis and generation
+- **MCP Protocol**: Standardized tool integrations
+
+### Integrations
+- **GitHub API**: Repository analysis, issue creation, profile enhancement
+- **Web Scraping**: Job boards, salary data, learning resources
+- **File-based Storage**: Simple persistence for skill profiles
+
+## 🗺️ Roadmap
+
+### ✅ V1 (Capstone - 3 Weeks)
+**Focus**: Research + Action fundamentals
+- ✅ GitHub analysis and skill gap detection
+- 🚧 LangGraph Portfolio Builder Agent
+- 🚧 Deep career research with web scraping
+- 🚧 Autonomous GitHub issue creation
+- 🚧 Progress tracking and weekly check-ins
+
+**Deliverables**: Working demo with real GitHub integration, research capabilities, and autonomous actions
+
+### 🔮 V2 (Future Enhancements)
+**Focus**: Scale and intelligence
+- Multi-user support with authentication
+- Database-backed persistence (PostgreSQL)
+- Advanced MCP integrations (LinkedIn, code quality tools)
+- ML-powered skill matching
+- Community features (share learning paths)
+- Mobile app
+
+## 📚 Key Documentation
+
+- **`CAPSTONE_PROPOSAL.md`**: Complete project vision and academic context
+- **`V1_DEVELOPMENT_PLAN.md`**: 25-issue breakdown for V1 implementation
+- **`CLAUDE.md`**: Session context and development history
+
+## 🤝 Contributing
+
+This is a capstone project, but feedback and suggestions are welcome! For V2 and beyond, contributions will be encouraged.
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+---
+
+**Built with ❤️ for developers who want to level up their careers through AI-powered insights and autonomous portfolio improvement.**
