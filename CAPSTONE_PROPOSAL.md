@@ -1,4 +1,4 @@
-# SkillBridge V1: Research + Action
+# SkillBridge.ai V1: Research + Action
 ## An MCP-Native Agentic Learning Assistant for Developers
 
 **Author:** Betul  
@@ -10,9 +10,9 @@
 
 ## Executive Summary
 
-SkillBridge is an MCP-native, agentic AI platform that transforms how developers identify and close skill gaps. Unlike traditional learning platforms that provide generic course recommendations, SkillBridge analyzes real GitHub repositories, autonomously researches the best learning resources through multi-step reasoning, and generates actionable GitHub issues with research-backed templates—all while maintaining full transparency in its decision-making process.
+SkillBridge.ai is an MCP-native, agentic AI platform that transforms how developers identify and close skill gaps. Unlike traditional learning platforms that provide generic course recommendations, SkillBridge analyzes real GitHub repositories, autonomously researches the best learning resources through multi-step reasoning, and generates actionable GitHub issues with research-backed templates—all while maintaining full transparency in its decision-making process.
 
-**Key Innovation:** SkillBridge bridges the gap between knowledge discovery and execution by combining LangGraph-powered autonomous research with GitHub-native action generation, creating a closed-loop system that thinks, researches, and acts.
+**Key Innovation:** SkillBridge.ai bridges the gap between knowledge discovery and execution by combining AI-powered autonomous research with GitHub-native action generation, creating a closed-loop system that thinks, researches, and acts.
 
 ---
 
@@ -68,7 +68,7 @@ Existing solutions fall into three categories, each with limitations:
 
 ## Solution Overview
 
-SkillBridge is an autonomous, MCP-native platform that implements a three-phase agentic workflow:
+SkillBridge.ai is an autonomous, MCP-native platform that implements a three-phase agentic workflow:
 
 ### Phase 1: Analysis 🔍
 **Analyze real repositories using GitHub MCP**

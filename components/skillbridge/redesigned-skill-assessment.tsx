@@ -2,7 +2,7 @@
 
 /**
  * Redesigned Skill Assessment Tab
- * GitHub-first approach with MCP tool integration
+ * GitHub-first approach with advanced tool integration
  */
 
 import { useState, useMemo } from 'react';
@@ -245,7 +245,7 @@ export function RedesignedSkillAssessment({ onNavigateToLearning }: RedesignedSk
             </div>
             <Badge variant="outline" className="text-xs">
               <Zap className="h-3 w-3 mr-1" />
-              Powered by GitHub MCP
+              Powered by GitHub Integration
             </Badge>
           </div>
         </CardHeader>

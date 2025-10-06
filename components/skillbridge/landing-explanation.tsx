@@ -30,34 +30,16 @@ export function LandingExplanation() {
     <div className="space-y-12 py-8">
       {/* Hero Section */}
       <div id="features" className="text-center space-y-6">
-        <Badge className="text-sm px-4 py-2 bg-purple-600/20 text-purple-300 border-purple-500/50">
-          <Sparkles className="h-4 w-4 mr-2 inline" />
-          V1 Capstone Project
-        </Badge>
         
-        <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          SkillBridge
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          SkillBridge.ai
         </h1>
         
         <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
-          The first <span className="font-semibold text-white">agentic AI platform</span> that doesn't just analyze your skills — 
-          it <span className="font-semibold text-white">takes action</span> to improve your career.
+          Analyze. Research. Act.<br />
+          <span className="font-semibold text-white">SkillBridge.ai</span> — the agentic AI platform that turns skills into progress.
         </p>
 
-        <div className="flex flex-wrap justify-center gap-4 text-sm">
-          <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-600/20 border border-blue-500/50">
-            <Brain className="h-4 w-4 text-blue-400" />
-            <span className="font-medium text-blue-300">LangGraph Agents</span>
-          </div>
-          <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-purple-600/20 border border-purple-500/50">
-            <Github className="h-4 w-4 text-purple-400" />
-            <span className="font-medium text-purple-300">GitHub MCP</span>
-          </div>
-          <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-green-600/20 border border-green-500/50">
-            <TrendingUp className="h-4 w-4 text-green-400" />
-            <span className="font-medium text-green-300">Real-time Research</span>
-          </div>
-        </div>
       </div>
 
       {/* Problem Statement */}
@@ -92,7 +74,7 @@ export function LandingExplanation() {
       {/* Solution */}
       <Card className="max-w-4xl mx-auto border-2 border-blue-500/50 bg-gradient-to-br from-blue-950/30 to-purple-950/30 backdrop-blur">
         <CardContent className="p-8 space-y-4">
-          <h2 className="text-2xl font-bold text-white">✅ The SkillBridge Solution</h2>
+          <h2 className="text-2xl font-bold text-white">✅ The SkillBridge.ai Solution</h2>
           <p className="text-lg text-gray-300">
             An <span className="font-semibold text-white">agentic AI system</span> that goes beyond analysis. 
             It <span className="font-semibold text-blue-400">researches</span> the market, 
@@ -108,11 +90,11 @@ export function LandingExplanation() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Phase 1 */}
-          <Card className="border-2 border-blue-500/50 bg-blue-950/20 backdrop-blur hover:shadow-xl hover:shadow-blue-500/20 transition-all">
+          <Card className="border-2 border-purple-200 dark:border-purple-800 hover:shadow-lg transition-shadow">
             <CardContent className="p-6 space-y-3">
               <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-950">
-                  <Search className="h-6 w-6 text-blue-600" />
+                <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-950">
+                  <Search className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
                   <Badge variant="outline" className="mb-1">Phase 1</Badge>
@@ -121,15 +103,15 @@ export function LandingExplanation() {
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start space-x-2">
-                  <CheckCircle2 className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-purple-600 mt-0.5" />
                   <span>Analyzes your repositories, tech stack, and code quality</span>
                 </li>
                 <li className="flex items-start space-x-2">
-                  <CheckCircle2 className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-purple-600 mt-0.5" />
                   <span>Auto-detects your role (Frontend, Backend, DevOps, Data, etc.)</span>
                 </li>
                 <li className="flex items-start space-x-2">
-                  <CheckCircle2 className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-purple-600 mt-0.5" />
                   <span>Identifies skill gaps vs. industry standards</span>
                 </li>
               </ul>
@@ -253,7 +235,7 @@ export function LandingExplanation() {
             </div>
             
             <div className="space-y-3">
-              <h3 className="font-semibold text-lg text-primary">🚀 Agentic AI (SkillBridge)</h3>
+              <h3 className="font-semibold text-lg text-primary">🚀 Agentic AI (SkillBridge.ai)</h3>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -269,10 +251,6 @@ export function LandingExplanation() {
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>State management (LangGraph)</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <span>Human-in-the-loop controls</span>
                 </li>
               </ul>
@@ -283,9 +261,9 @@ export function LandingExplanation() {
 
       {/* CTA Section */}
       <div className="text-center space-y-6 py-8">
-        <h2 className="text-3xl font-bold">Ready to Level Up Your Career?</h2>
+        <h2 className="text-3xl font-bold italic text-purple-600">Ready to Level Up Your Career?</h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Enter your GitHub username below and let SkillBridge's AI agents analyze your portfolio, 
+          Enter your GitHub username below and let SkillBridge.ai's AI agents analyze your portfolio, 
           research the job market, and create actionable improvement tasks.
         </p>
         

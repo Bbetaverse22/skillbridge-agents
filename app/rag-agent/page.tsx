@@ -8,7 +8,7 @@ export default function RAGAgentPage() {
       <div className="border-b p-4">
         <h1 className="text-2xl font-semibold">RAG Knowledge Agent</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Ask about SkillBridge capabilities, codebase design, or technical topics. Responses use the Vectorize knowledge base when helpful.
+          Ask about SkillBridge.ai capabilities, codebase design, or technical topics. Responses use the Vectorize knowledge base when helpful.
         </p>
       </div>
 

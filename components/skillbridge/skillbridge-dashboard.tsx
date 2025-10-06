@@ -28,7 +28,7 @@ export default function SkillBridgeDashboard() {
                 <Brain className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">SkillBridge</h1>
+                <h1 className="text-xl font-bold text-white">SkillBridge.ai</h1>
                 <p className="text-xs text-blue-300">
                   Agentic Career Platform
                 </p>

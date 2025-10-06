@@ -115,13 +115,13 @@ export default function GitHubDemo() {
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">GitHub Integration Demo</h1>
+        <h1 className="text-3xl font-bold mb-2 title-white">GitHub Integration Demo</h1>
         <p className="text-muted-foreground">
           Experience the power of GitHub analysis with our AI-powered skill assessment tools.
         </p>
       </div>
 
-      <Card className="mb-6">
+      <Card className="mb-6 bg-card">
         <CardHeader>
           <CardTitle>GitHub User Analysis</CardTitle>
           <CardDescription>
@@ -144,9 +144,9 @@ export default function GitHubDemo() {
       </Card>
 
       {error && (
-        <Card className="mb-6 border-red-200 bg-red-50">
+        <Card className="mb-6 border-red-300 bg-red-100/50">
           <CardContent className="pt-6">
-            <p className="text-red-600">{error}</p>
+            <p className="text-red-700">{error}</p>
           </CardContent>
         </Card>
       )}
@@ -160,7 +160,7 @@ export default function GitHubDemo() {
           </TabsList>
 
           <TabsContent value="profile">
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <img
@@ -195,7 +195,7 @@ export default function GitHubDemo() {
                     href={user.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    className="text-primary hover:underline"
                   >
                     View on GitHub →
                   </a>
@@ -207,7 +207,7 @@ export default function GitHubDemo() {
           <TabsContent value="repositories">
             <div className="grid gap-4">
               {repositories.map((repo, index) => (
-                <Card key={index}>
+                <Card key={index} className="bg-card">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -241,7 +241,7 @@ export default function GitHubDemo() {
           </TabsContent>
 
           <TabsContent value="skills">
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <CardTitle>Technical Skills Analysis</CardTitle>
                 <CardDescription>
@@ -263,15 +263,15 @@ export default function GitHubDemo() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span>TypeScript</span>
-                        <span className="text-green-600">Expert</span>
+                        <span className="text-emerald-600 font-medium">Expert</span>
                       </div>
                       <div className="flex justify-between">
                         <span>JavaScript</span>
-                        <span className="text-blue-600">Advanced</span>
+                        <span className="text-blue-600 font-medium">Advanced</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Python</span>
-                        <span className="text-yellow-600">Intermediate</span>
+                        <span className="text-amber-600 font-medium">Intermediate</span>
                       </div>
                     </div>
                   </div>
@@ -290,7 +290,7 @@ export default function GitHubDemo() {
         </Tabs>
       )}
 
-      <Card className="mt-8">
+      <Card className="mt-8 bg-card">
         <CardHeader>
           <CardTitle>GitHub Integration Features</CardTitle>
         </CardHeader>

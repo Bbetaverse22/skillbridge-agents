@@ -1,7 +1,7 @@
 {
-  "name": "skillbridge-agents",
+  "name": "skillbridge-ai",
   "version": "1.0.0",
-  "description": "SkillBridge Agents - Multi-Agent Framework for Career Development with Security Sanitization",
+  "description": "SkillBridge.ai - Multi-Agent Framework for Career Development with Security Sanitization",
   "packageManager": "pnpm@9.12.0",
   "private": true,
   "engines": {

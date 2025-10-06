@@ -1,6 +1,6 @@
 /**
  * GitHub API Client using native fetch
- * Provides GitHub integration functionality for the SkillBridge agents
+ * Provides GitHub integration functionality for the SkillBridge.ai agents
  */
 
 export interface GitHubRepository {
@@ -85,7 +85,7 @@ export class GitHubClient {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: HeadersInit = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'SkillBridge-Agents/1.0.0',
+      'User-Agent': 'SkillBridge.ai-Agents/1.0.0',
     };
 
     if (this.token) {

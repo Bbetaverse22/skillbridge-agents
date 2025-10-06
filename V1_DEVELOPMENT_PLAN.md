@@ -1,4 +1,4 @@
-# SkillBridge V1 - Development Plan & GitHub Issues
+# SkillBridge.ai V1 - Development Plan & GitHub Issues
 
 ## 📋 Overview
 

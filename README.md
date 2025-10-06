@@ -1,16 +1,14 @@
-# 🚀 SkillBridge: Agentic Career Development Platform
+# 🚀 SkillBridge.ai: Agentic Career Development Platform
 
-> **V1 Capstone Project**: Research + Action with LangGraph & MCP
-
-An **agentic AI platform** that helps developers identify skill gaps and improve their portfolios through deep research and autonomous actions. Unlike traditional generative AI that just produces reports, SkillBridge **takes action**: analyzing GitHub profiles, creating improvement tasks, and continuously monitoring progress.
+An **agentic AI platform** that helps developers identify skill gaps and improve their portfolios through deep research and autonomous actions. Unlike traditional generative AI that just produces reports, SkillBridge.ai **takes action**: analyzing GitHub profiles, creating improvement tasks, and continuously monitoring progress.
 
 ## 🎯 V1 Vision: Research + Action
 
-SkillBridge V1 focuses on two core innovations:
+SkillBridge.ai V1 focuses on two core innovations:
 1. **Deep Research**: Real-time web scraping for job requirements, salary trends, and learning resources
 2. **Autonomous Actions**: GitHub integration that creates issues, drafts improvements, and tracks progress
 
-Built with **LangGraph** for stateful agentic workflows and **MCP (Model Context Protocol)** for standardized tool integrations.
+Built with advanced AI agents for intelligent career development and portfolio improvement.
 
 ## ✨ V1 Features
 
@@ -20,16 +18,16 @@ Built with **LangGraph** for stateful agentic workflows and **MCP (Model Context
 - **Learning Intelligence**: Finds relevant courses, documentation, and tutorials based on gaps
 - **Persistent Memory**: Stores skill profiles for continuous tracking and improvement
 
-### 🤖 Portfolio Builder Agent (LangGraph-Powered)
+### 🤖 Portfolio Builder Agent
 - **Autonomous Improvement Loop**: Analyzes portfolio weaknesses and creates actionable tasks
-- **GitHub Integration (MCP)**: Creates issues and PRs directly in your repositories
+- **GitHub Integration**: Creates issues and PRs directly in your repositories
 - **README Generation**: Drafts professional documentation for your projects
 - **Progress Monitoring**: Tracks completion and adapts recommendations
 
-### 🔗 MCP Integrations
-- **GitHub MCP**: Repository analysis, issue creation, profile enhancement
-- **Web Research MCP**: Real-time job market and learning resource discovery
-- **Extensible Architecture**: Easy to add custom MCP servers (e.g., SQL Linter)
+### 🔗 Tool Integrations
+- **GitHub API**: Repository analysis, issue creation, profile enhancement
+- **Web Research**: Real-time job market and learning resource discovery
+- **Extensible Architecture**: Easy to add custom tools and integrations
 
 ### 🎨 Modern UI
 - **Single Tab Focus**: Clean, action-oriented interface for skill analysis
@@ -86,11 +84,11 @@ Built with **LangGraph** for stateful agentic workflows and **MCP (Model Context
 
 ## 💡 How It Works: The Agentic Loop
 
-### Phase 1: Deep Analysis (LangGraph State Machine)
+### Phase 1: Deep Analysis
 1. **GitHub Profiling**: Analyzes your repositories, tech stack, and coding patterns
 2. **Role Detection**: Automatically determines if you're a backend dev, data engineer, DevOps, etc.
 3. **Skill Gap Identification**: Compares your current skills vs. market demands
-4. **Market Intelligence**: Uses MCP to scrape real job postings for required skills
+4. **Market Intelligence**: Scrapes real job postings for required skills
 
 ### Phase 2: Research & Planning
 1. **Job Market Research**: Real-time web scraping of LinkedIn, Indeed, AngelList
@@ -118,7 +116,7 @@ Built with **LangGraph** for stateful agentic workflows and **MCP (Model Context
 # AI Model Access
 OPENAI_API_KEY=your_openai_api_key_here
 
-# GitHub MCP Integration (Required for Portfolio Builder)
+# GitHub Integration (Required for Portfolio Builder)
 GITHUB_TOKEN=your_github_personal_access_token_here
 ```
 
@@ -129,30 +127,30 @@ GITHUB_TOKEN=your_github_personal_access_token_here
    - `read:user` (for profile analysis)
 3. Add to `.env.local` as `GITHUB_TOKEN`
 
-### MCP Architecture
+### Tool Integration Architecture
 
-SkillBridge V1 uses **Model Context Protocol (MCP)** for tool integrations:
+SkillBridge.ai V1 uses standardized tool integrations for external services:
 
-**GitHub MCP Server** (Built-in):
+**GitHub API Integration** (Built-in):
 - Repository analysis and profiling
 - Issue creation for portfolio improvements
 - README generation and documentation
 - Progress tracking via GitHub API
 
-**Web Research MCP** (Planned):
+**Web Research Integration** (Planned):
 - Job board scraping (LinkedIn, Indeed, AngelList)
 - Salary data aggregation
 - Learning resource discovery
 - Market trend analysis
 
 **Extensible Design**:
-- Add custom MCP servers (e.g., SQL Linter, Code Quality)
-- Standardized tool interface for easy integration
-- See `lib/agents/coordinator.ts` for MCP tool definitions
+- Add custom tools and integrations
+- Standardized interface for easy integration
+- See `lib/agents/coordinator.ts` for tool definitions
 
-### LangGraph Integration
+### Agent Workflow Architecture
 
-The Portfolio Builder Agent uses **LangGraph** for stateful workflows:
+The Portfolio Builder Agent uses advanced workflow management:
 - **State Management**: Tracks analysis progress, goals, and actions
 - **Conditional Routing**: Decides next steps based on current state
 - **Human-in-the-Loop**: Optional approval gates for GitHub actions
@@ -170,9 +168,9 @@ See `V1_DEVELOPMENT_PLAN.md` for implementation roadmap.
 
 ### Backend & AI
 - **AI SDK 5 (Vercel)**: Streamable AI responses and tool calling
-- **LangGraph**: Stateful agentic workflows and decision loops
+- **Advanced Workflow Management**: Stateful agentic workflows and decision loops
 - **OpenAI GPT-4**: Language model for analysis and generation
-- **MCP Protocol**: Standardized tool integrations
+- **Standardized Tool Protocol**: Flexible tool integrations
 
 ### Integrations
 - **GitHub API**: Repository analysis, issue creation, profile enhancement
@@ -184,7 +182,7 @@ See `V1_DEVELOPMENT_PLAN.md` for implementation roadmap.
 ### ✅ V1 (Capstone - 3 Weeks)
 **Focus**: Research + Action fundamentals
 - ✅ GitHub analysis and skill gap detection
-- 🚧 LangGraph Portfolio Builder Agent
+- 🚧 Portfolio Builder Agent
 - 🚧 Deep career research with web scraping
 - 🚧 Autonomous GitHub issue creation
 - 🚧 Progress tracking and weekly check-ins
@@ -195,7 +193,7 @@ See `V1_DEVELOPMENT_PLAN.md` for implementation roadmap.
 **Focus**: Scale and intelligence
 - Multi-user support with authentication
 - Database-backed persistence (PostgreSQL)
-- Advanced MCP integrations (LinkedIn, code quality tools)
+- Advanced tool integrations (LinkedIn, code quality tools)
 - ML-powered skill matching
 - Community features (share learning paths)
 - Mobile app
@@ -209,11 +207,6 @@ See `V1_DEVELOPMENT_PLAN.md` for implementation roadmap.
 ## 🤝 Contributing
 
 This is a capstone project, but feedback and suggestions are welcome! For V2 and beyond, contributions will be encouraged.
-
-## 📄 License
-
-MIT License - see LICENSE file for details
-
----
+----
 
 **Built with ❤️ for developers who want to level up their careers through AI-powered insights and autonomous portfolio improvement.**

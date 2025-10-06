@@ -519,7 +519,7 @@ export class GapAnalyzerAgent {
     const response = await fetch(url, {
       headers: {
         'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'SkillBridge-Agents'
+        'User-Agent': 'SkillBridge.ai-Agents'
       }
     });
 

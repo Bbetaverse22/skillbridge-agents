@@ -606,7 +606,7 @@ Provide clear, actionable insights based on progress data.
     };
 
     return prompts[agentType as keyof typeof prompts] || `
-You are a specialized agent within the SkillBridge multi-agent platform. Your role is to provide expert guidance in your specific domain while working collaboratively with other agents to deliver comprehensive career development solutions.
+You are a specialized agent within the SkillBridge.ai multi-agent platform. Your role is to provide expert guidance in your specific domain while working collaboratively with other agents to deliver comprehensive career development solutions.
 
 For technical questions about programming, frameworks, or development concepts, you have access to a knowledge base of technical documentation and can provide specific, actionable guidance.
 

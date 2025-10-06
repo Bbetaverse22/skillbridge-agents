@@ -2,7 +2,7 @@
 
 /**
  * V1 Agentic Skill Analyzer
- * Single-page agentic workflow with LangGraph-powered Portfolio Builder
+ * Single-page agentic workflow with AI-powered Portfolio Builder
  */
 
 import { useState, useMemo } from 'react';
@@ -110,7 +110,7 @@ export function AgenticSkillAnalyzer() {
     setCareerInsights(null);
 
     try {
-      // Phase 1: REAL GitHub Analysis (using existing MCP functionality)
+      // Phase 1: REAL GitHub Analysis (using existing tool integrations)
       addLog('info', 'Starting GitHub profile analysis...', <Github className="h-4 w-4" />);
       setProgress(10);
 
@@ -189,7 +189,7 @@ export function AgenticSkillAnalyzer() {
       setSkillGaps(topGaps);
       setProgress(60);
 
-      // Phase 2: Market Research (SIMULATED - to be implemented with LangGraph)
+      // Phase 2: Market Research (SIMULATED - to be implemented)
       setAgentStatus('RESEARCHING');
       addLog('info', 'Starting deep market research...', <Brain className="h-4 w-4" />);
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -320,18 +320,14 @@ export function AgenticSkillAnalyzer() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Brain className="h-6 w-6 text-primary" />
+              <div className="p-2 rounded-lg bg-white/10">
+                <Brain className="h-6 w-6 text-white" />
               </div>
               <div>
                 <CardTitle className="text-2xl flex items-center space-x-2">
-                  <span>Agentic Skill Analyzer</span>
-                  <Badge variant="outline" className="text-xs">
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    LangGraph + MCP
-                  </Badge>
+                  <span className="text-white">Agentic Skill Analyzer</span>
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription className="text-base text-white">
                   Deep research + autonomous portfolio improvements powered by AI agents
                 </CardDescription>
               </div>
