@@ -28,6 +28,9 @@ export interface GitHubAnalysis {
   tools: string[];
   skillLevel: 'beginner' | 'intermediate' | 'advanced';
   recommendations: string[];
+  // Raw data for enhanced analysis (optional)
+  _contentsData?: any[];
+  _languagesData?: any;
 }
 
 export interface GapAnalysisResult {
@@ -83,6 +86,37 @@ export class GapAnalyzerAgent {
         { id: 'business', name: 'Business Acumen', currentLevel: 1, targetLevel: 5, importance: 3, category: 'domain' },
         { id: 'architecture', name: 'System Architecture', currentLevel: 1, targetLevel: 5, importance: 4, category: 'domain' },
         { id: 'security', name: 'Security Best Practices', currentLevel: 1, targetLevel: 5, importance: 4, category: 'domain' },
+      ]
+    },
+    {
+      id: 'design-ux',
+      name: 'Design & User Experience',
+      skills: [
+        { id: 'component-design', name: 'Component Design Patterns', currentLevel: 1, targetLevel: 5, importance: 4, category: 'design-ux' },
+        { id: 'accessibility', name: 'Accessibility (A11y)', currentLevel: 1, targetLevel: 5, importance: 5, category: 'design-ux' },
+        { id: 'responsive-design', name: 'Responsive Design', currentLevel: 1, targetLevel: 5, importance: 4, category: 'design-ux' },
+        { id: 'design-systems', name: 'Design Systems', currentLevel: 1, targetLevel: 5, importance: 3, category: 'design-ux' },
+        { id: 'ui-patterns', name: 'UI Design Patterns', currentLevel: 1, targetLevel: 5, importance: 4, category: 'design-ux' },
+      ]
+    },
+    {
+      id: 'code-quality',
+      name: 'Code Quality & Maintainability',
+      skills: [
+        { id: 'type-safety', name: 'Type Safety (TypeScript)', currentLevel: 1, targetLevel: 5, importance: 5, category: 'code-quality' },
+        { id: 'clean-code', name: 'Clean Code Practices', currentLevel: 1, targetLevel: 5, importance: 4, category: 'code-quality' },
+        { id: 'error-handling', name: 'Error Handling', currentLevel: 1, targetLevel: 5, importance: 4, category: 'code-quality' },
+        { id: 'testing-coverage', name: 'Testing & Coverage', currentLevel: 1, targetLevel: 5, importance: 5, category: 'code-quality' },
+      ]
+    },
+    {
+      id: 'architecture-patterns',
+      name: 'Architecture & Design Patterns',
+      skills: [
+        { id: 'component-architecture', name: 'Component Architecture', currentLevel: 1, targetLevel: 5, importance: 4, category: 'architecture-patterns' },
+        { id: 'state-management', name: 'State Management', currentLevel: 1, targetLevel: 5, importance: 5, category: 'architecture-patterns' },
+        { id: 'api-design', name: 'API Design & Integration', currentLevel: 1, targetLevel: 5, importance: 4, category: 'architecture-patterns' },
+        { id: 'scalability', name: 'Scalability Patterns', currentLevel: 1, targetLevel: 5, importance: 3, category: 'architecture-patterns' },
       ]
     }
   ];
@@ -237,7 +271,10 @@ export class GapAnalyzerAgent {
         languages,
         tools,
         skillLevel,
-        recommendations
+        recommendations,
+        // Include raw data for enhanced skill detection
+        _contentsData: contentsData,
+        _languagesData: languagesData
       };
 
     } catch (error) {
@@ -254,7 +291,25 @@ export class GapAnalyzerAgent {
     options: { includeCategories?: string[] } = {}
   ): Promise<GapAnalysisResult> {
     // Create skills based on discovered technologies
-    const skills = this.createSkillsFromTechnologies(githubAnalysis);
+    let skills: Skill[];
+    
+    // Use enhanced skill detection if repository contents are available
+    // Either from the GitHubAnalysis object or passed as parameters
+    const contentsData = githubAnalysis._contentsData;
+    const languagesData = githubAnalysis._languagesData;
+    
+    if (contentsData && languagesData) {
+      console.log('🎨 Using enhanced skill detection (design, code quality, architecture)');
+      skills = await this.createEnhancedSkillsFromTechnologies(
+        githubAnalysis,
+        contentsData,
+        languagesData
+      );
+    } else {
+      console.log('📊 Using basic skill detection (technical skills only)');
+      // Fall back to basic detection
+      skills = this.createSkillsFromTechnologies(githubAnalysis);
+    }
     
     // Analyze skill gaps automatically
     const analysisResult = this.analyzeSkillGaps(skills, options);
@@ -265,8 +320,11 @@ export class GapAnalyzerAgent {
       ...this.generateGitHubSpecificRecommendations(githubAnalysis)
     ];
 
-    // Include the GitHub analysis in the result for storage
-    analysisResult.githubAnalysis = githubAnalysis;
+    // Include the GitHub analysis in the result for storage (without the raw data)
+    const cleanGithubAnalysis = { ...githubAnalysis };
+    delete cleanGithubAnalysis._contentsData;
+    delete cleanGithubAnalysis._languagesData;
+    analysisResult.githubAnalysis = cleanGithubAnalysis;
 
     return analysisResult;
   }
@@ -906,5 +964,285 @@ export class GapAnalyzerAgent {
         }
       }
     });
+  }
+
+  /**
+   * Detect design & UX skills from repository contents
+   */
+  private async detectDesignSkills(contentsData: any[]): Promise<{ [key: string]: number }> {
+    const scores = {
+      'component-design': 0,
+      'accessibility': 0,
+      'responsive-design': 0,
+      'design-systems': 0,
+      'ui-patterns': 0
+    };
+
+    const filePatterns = {
+      componentLibrary: /components\/.*\.(tsx|jsx|vue)/i,
+      designSystem: /(design-system|tokens|theme\.(ts|js|json))/i,
+      storybook: /(.storybook|\.stories\.(tsx|jsx))/i,
+      figma: /(figma\.config|design-tokens\.json)/i
+    };
+
+    // Check for design-related file structures
+    contentsData.forEach(file => {
+      const path = file.path || file.name || '';
+      
+      // Component design
+      if (filePatterns.componentLibrary.test(path)) {
+        scores['component-design'] += 0.2;
+      }
+      
+      // Design system
+      if (filePatterns.designSystem.test(path)) {
+        scores['design-systems'] += 0.5;
+      }
+      
+      // Storybook (component documentation)
+      if (filePatterns.storybook.test(path)) {
+        scores['component-design'] += 0.3;
+        scores['ui-patterns'] += 0.2;
+      }
+      
+      // Figma integration
+      if (filePatterns.figma.test(path)) {
+        scores['design-systems'] += 0.3;
+      }
+    });
+
+    // Check for accessibility and responsive design in package.json
+    const packageFile = contentsData.find(f => f.name === 'package.json');
+    if (packageFile) {
+      try {
+        const packageContent = packageFile.content || '';
+        
+        // Accessibility libraries
+        if (packageContent.includes('aria') || packageContent.includes('a11y') || packageContent.includes('axe')) {
+          scores['accessibility'] += 1.5;
+        }
+        
+        // Responsive design frameworks
+        if (packageContent.includes('tailwind') || packageContent.includes('radix') || packageContent.includes('headless')) {
+          scores['responsive-design'] += 1.0;
+          scores['component-design'] += 0.5;
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
+
+    // Normalize scores to 1-5 scale
+    return Object.fromEntries(
+      Object.entries(scores).map(([key, value]) => [key, this.clampSkillLevel(value + 1)])
+    );
+  }
+
+  /**
+   * Detect code quality skills from repository contents
+   */
+  private async detectCodeQualitySkills(contentsData: any[], languagesData: any): Promise<{ [key: string]: number }> {
+    const scores = {
+      'type-safety': 0,
+      'clean-code': 0,
+      'error-handling': 0,
+      'testing-coverage': 0
+    };
+
+    // Check for TypeScript
+    if (languagesData['TypeScript'] || contentsData.some(f => f.name === 'tsconfig.json')) {
+      scores['type-safety'] = 4.5;
+      
+      // Check for strict TypeScript config
+      const tsconfigFile = contentsData.find(f => f.name === 'tsconfig.json');
+      if (tsconfigFile && tsconfigFile.content && tsconfigFile.content.includes('"strict": true')) {
+        scores['type-safety'] = 5.0;
+      }
+    }
+
+    // Check for linters and formatters
+    const hasLinter = contentsData.some(f => 
+      f.name === '.eslintrc' || 
+      f.name === '.eslintrc.json' || 
+      f.name === 'eslint.config.js'
+    );
+    const hasPrettier = contentsData.some(f => 
+      f.name === '.prettierrc' || 
+      f.name === 'prettier.config.js'
+    );
+    
+    if (hasLinter && hasPrettier) {
+      scores['clean-code'] = 4.0;
+    } else if (hasLinter || hasPrettier) {
+      scores['clean-code'] = 3.0;
+    } else {
+      scores['clean-code'] = 2.0;
+    }
+
+    // Check for testing frameworks
+    const testFiles = contentsData.filter(f => 
+      /\.(test|spec)\.(ts|tsx|js|jsx)$/.test(f.name || f.path || '')
+    );
+    const hasTestFramework = contentsData.some(f => 
+      f.name === 'jest.config.js' || 
+      f.name === 'vitest.config.ts' || 
+      f.name === 'package.json' && (f.content || '').includes('"test"')
+    );
+    
+    if (testFiles.length > 10 && hasTestFramework) {
+      scores['testing-coverage'] = 4.5;
+    } else if (testFiles.length > 5) {
+      scores['testing-coverage'] = 3.5;
+    } else if (testFiles.length > 0) {
+      scores['testing-coverage'] = 2.5;
+    } else {
+      scores['testing-coverage'] = 1.0;
+    }
+
+    // Basic error handling detection (assume reasonable level if TypeScript is used)
+    if (scores['type-safety'] > 3) {
+      scores['error-handling'] = 3.5;
+    } else {
+      scores['error-handling'] = 2.5;
+    }
+
+    return Object.fromEntries(
+      Object.entries(scores).map(([key, value]) => [key, this.clampSkillLevel(value)])
+    );
+  }
+
+  /**
+   * Detect architecture patterns from repository contents
+   */
+  private async detectArchitectureSkills(contentsData: any[]): Promise<{ [key: string]: number }> {
+    const scores = {
+      'component-architecture': 0,
+      'state-management': 0,
+      'api-design': 0,
+      'scalability': 0
+    };
+
+    const folderStructure = contentsData.map(f => f.path || f.name || '');
+    
+    // Component architecture
+    const hasComponentsFolder = folderStructure.some(p => p.includes('components/'));
+    const hasHooksFolder = folderStructure.some(p => p.includes('hooks/'));
+    const hasUtilsFolder = folderStructure.some(p => p.includes('utils/') || p.includes('lib/'));
+    
+    if (hasComponentsFolder && hasHooksFolder && hasUtilsFolder) {
+      scores['component-architecture'] = 4.5;
+    } else if (hasComponentsFolder && (hasHooksFolder || hasUtilsFolder)) {
+      scores['component-architecture'] = 3.5;
+    } else if (hasComponentsFolder) {
+      scores['component-architecture'] = 2.5;
+    } else {
+      scores['component-architecture'] = 1.5;
+    }
+
+    // State management
+    const hasStoreFolder = folderStructure.some(p => p.includes('store/') || p.includes('redux/'));
+    const hasContextFolder = folderStructure.some(p => p.includes('context/'));
+    const packageFile = contentsData.find(f => f.name === 'package.json');
+    
+    if (packageFile) {
+      const content = packageFile.content || '';
+      if (content.includes('redux') || content.includes('zustand') || content.includes('mobx')) {
+        scores['state-management'] = 4.0;
+      } else if (hasStoreFolder || hasContextFolder) {
+        scores['state-management'] = 3.0;
+      } else {
+        scores['state-management'] = 2.0;
+      }
+    }
+
+    // API design
+    const hasApiFolder = folderStructure.some(p => p.includes('api/') || p.includes('services/'));
+    const hasGraphQLFolder = folderStructure.some(p => p.includes('graphql/'));
+    
+    if (hasApiFolder && hasGraphQLFolder) {
+      scores['api-design'] = 4.5;
+    } else if (hasApiFolder || hasGraphQLFolder) {
+      scores['api-design'] = 3.5;
+    } else {
+      scores['api-design'] = 2.0;
+    }
+
+    // Scalability patterns
+    const hasLazyLoading = folderStructure.some(p => /lazy|dynamic/.test(p));
+    const hasCodeSplitting = contentsData.some(f => 
+      (f.name || '').includes('webpack.config') || 
+      (f.name || '').includes('vite.config') ||
+      (f.name || '').includes('next.config')
+    );
+    
+    if (hasCodeSplitting && hasLazyLoading) {
+      scores['scalability'] = 4.0;
+    } else if (hasCodeSplitting || hasLazyLoading) {
+      scores['scalability'] = 3.0;
+    } else {
+      scores['scalability'] = 2.0;
+    }
+
+    return Object.fromEntries(
+      Object.entries(scores).map(([key, value]) => [key, this.clampSkillLevel(value)])
+    );
+  }
+
+  /**
+   * Enhanced technology skill extraction with new categories
+   */
+  private async createEnhancedSkillsFromTechnologies(
+    githubAnalysis: GitHubAnalysis,
+    contentsData: any[],
+    languagesData: any
+  ): Promise<Skill[]> {
+    const skills: Skill[] = [];
+
+    // Get existing technical skills (keep all existing functionality)
+    const existingSkills = this.createSkillsFromTechnologies(githubAnalysis);
+    skills.push(...existingSkills);
+
+    // Detect new categories
+    const designSkills = await this.detectDesignSkills(contentsData);
+    const codeQualitySkills = await this.detectCodeQualitySkills(contentsData, languagesData);
+    const architectureSkills = await this.detectArchitectureSkills(contentsData);
+
+    // Add design & UX skills
+    Object.entries(designSkills).forEach(([skillId, level]) => {
+      skills.push({
+        id: `design-${skillId}`,
+        name: skillId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        currentLevel: level,
+        targetLevel: 5,
+        importance: 4,
+        category: 'design-ux'
+      });
+    });
+
+    // Add code quality skills
+    Object.entries(codeQualitySkills).forEach(([skillId, level]) => {
+      skills.push({
+        id: `quality-${skillId}`,
+        name: skillId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        currentLevel: level,
+        targetLevel: 5,
+        importance: skillId === 'type-safety' || skillId === 'testing-coverage' ? 5 : 4,
+        category: 'code-quality'
+      });
+    });
+
+    // Add architecture skills
+    Object.entries(architectureSkills).forEach(([skillId, level]) => {
+      skills.push({
+        id: `arch-${skillId}`,
+        name: skillId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        currentLevel: level,
+        targetLevel: 5,
+        importance: skillId === 'state-management' ? 5 : 4,
+        category: 'architecture-patterns'
+      });
+    });
+
+    return skills;
   }
 }

@@ -30,9 +30,10 @@ import {
 
 interface RedesignedSkillAssessmentProps {
   onNavigateToLearning?: () => void;
+  onSkillsAssessed?: (skills: string[], targetRole?: string) => void;
 }
 
-export function RedesignedSkillAssessment({ onNavigateToLearning }: RedesignedSkillAssessmentProps) {
+export function RedesignedSkillAssessment({ onNavigateToLearning, onSkillsAssessed }: RedesignedSkillAssessmentProps) {
   const [githubInput, setGithubInput] = useState('');
   const [usernameInput, setUsernameInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -41,6 +42,38 @@ export function RedesignedSkillAssessment({ onNavigateToLearning }: RedesignedSk
   const [progress, setProgress] = useState(0);
   
   const gapAnalyzer = useMemo(() => new GapAnalyzerAgent(), []);
+
+  // Helper to extract skills from analysis results
+  const extractSkills = (githubAnalysis: any, gapAnalysis: any): string[] => {
+    const skills = new Set<string>();
+    
+    // From GitHub analysis
+    if (githubAnalysis?.languages) {
+      githubAnalysis.languages.forEach((lang: string) => skills.add(lang));
+    }
+    if (githubAnalysis?.frameworks) {
+      githubAnalysis.frameworks.forEach((fw: string) => skills.add(fw));
+    }
+    if (githubAnalysis?.technologies) {
+      githubAnalysis.technologies.forEach((tech: string) => skills.add(tech));
+    }
+    if (githubAnalysis?.tools) {
+      githubAnalysis.tools.forEach((tool: string) => skills.add(tool));
+    }
+    
+    // From gap analysis categories
+    if (gapAnalysis?.categories) {
+      gapAnalysis.categories.forEach((category: any) => {
+        category.skills?.forEach((skill: any) => {
+          if (skill.name && skill.currentLevel > 0) {
+            skills.add(skill.name);
+          }
+        });
+      });
+    }
+    
+    return Array.from(skills);
+  };
 
   const handleAnalyzeRepository = async () => {
     setIsAnalyzing(true);
@@ -99,6 +132,13 @@ export function RedesignedSkillAssessment({ onNavigateToLearning }: RedesignedSk
         github: githubAnalysis,
         gaps: gapAnalysis,
       });
+      
+      // Extract and send skills to parent
+      const skills = extractSkills(githubAnalysis, gapAnalysis);
+      console.log('📤 Extracted skills:', skills);
+      if (onSkillsAssessed && skills.length > 0) {
+        onSkillsAssessed(skills, 'Full-Stack Developer'); // Can be inferred from skills later
+      }
       
     } catch (err) {
       console.error('❌ Analysis error:', err);
@@ -205,6 +245,13 @@ export function RedesignedSkillAssessment({ onNavigateToLearning }: RedesignedSk
         github: githubAnalysis,
         gaps: gapAnalysis,
       });
+      
+      // Extract and send skills to parent
+      const skills = extractSkills(githubAnalysis, gapAnalysis);
+      console.log('📤 Extracted profile skills:', skills);
+      if (onSkillsAssessed && skills.length > 0) {
+        onSkillsAssessed(skills, 'Full-Stack Developer'); // Can be inferred from skills later
+      }
       
     } catch (err) {
       console.error('❌ Profile analysis error:', err);

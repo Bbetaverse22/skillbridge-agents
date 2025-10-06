@@ -4,15 +4,26 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, BarChart3, BookOpen, Briefcase, TrendingUp, MessageSquare, Github, Settings } from "lucide-react";
+import { Shield, BarChart3, TrendingUp, MessageSquare, Github, Settings, Bot } from "lucide-react";
 
 // Import existing components
 import ChatAssistant from "@/components/chat/chat-assistant";
 import { RedesignedSkillAssessment } from "./redesigned-skill-assessment";
-import { LearningPathsTab } from "./learning-paths-tab";
+import { LearningAndCareerTab } from "./learning-and-career-tab";
+import { PortfolioBuilderTab } from "./portfolio-builder-tab";
 
 export default function SkillBridgeDashboard() {
   const [activeTab, setActiveTab] = useState("chat");
+  const [assessedSkills, setAssessedSkills] = useState<string[]>([]);
+  const [targetRole, setTargetRole] = useState<string>("Full-Stack Developer");
+
+  // Callback to receive skills from assessment
+  const handleSkillsAssessed = (skills: string[], role?: string) => {
+    console.log('📊 Skills assessed:', skills);
+    setAssessedSkills(skills);
+    if (role) setTargetRole(role);
+    // Don't auto-navigate - let user see results first!
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,29 +78,25 @@ export default function SkillBridgeDashboard() {
               <span>Automatic skill gap analysis</span>
             </span>
             <span className="flex items-center space-x-2">
-              <BookOpen className="h-4 w-4" />
-              <span>Knowledge-backed recommendations</span>
+              <TrendingUp className="h-4 w-4" />
+              <span>AI-powered career simulation</span>
             </span>
           </div>
         </section>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="gaps" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
               <span>Skill Analysis</span>
             </TabsTrigger>
-            <TabsTrigger value="learning" className="flex items-center space-x-2">
-              <BookOpen className="h-4 w-4" />
-              <span>Learning Paths</span>
+            <TabsTrigger value="portfolio-builder" className="flex items-center space-x-2">
+              <Bot className="h-4 w-4" />
+              <span>Portfolio Builder 🤖</span>
             </TabsTrigger>
-            <TabsTrigger value="career" className="flex items-center space-x-2">
-              <Briefcase className="h-4 w-4" />
-              <span>Career</span>
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center space-x-2">
+            <TabsTrigger value="learning-career" className="flex items-center space-x-2">
               <TrendingUp className="h-4 w-4" />
-              <span>Progress</span>
+              <span>Learning & Career</span>
             </TabsTrigger>
             <TabsTrigger value="chat" className="flex items-center space-x-2">
               <MessageSquare className="h-4 w-4" />
@@ -99,56 +106,23 @@ export default function SkillBridgeDashboard() {
 
           {/* Skill Analysis Tab */}
           <TabsContent value="gaps" className="space-y-6">
-            <RedesignedSkillAssessment onNavigateToLearning={() => setActiveTab('learning')} />
+            <RedesignedSkillAssessment 
+              onNavigateToLearning={() => setActiveTab('learning-career')}
+              onSkillsAssessed={handleSkillsAssessed}
+            />
           </TabsContent>
 
-          {/* Learning Tab */}
-          <TabsContent value="learning" className="space-y-6">
-            <LearningPathsTab />
+          {/* Portfolio Builder Tab - AGENTIC */}
+          <TabsContent value="portfolio-builder" className="space-y-6">
+            <PortfolioBuilderTab githubUsername="your-username" />
           </TabsContent>
 
-          {/* Career Tab */}
-          <TabsContent value="career" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>💼 Career Development</CardTitle>
-                <CardDescription>
-                  Resume generation, skill badges, and OSS opportunities
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Career Tools Coming Soon</h3>
-                  <p className="text-muted-foreground mb-4">
-                    This feature will help you build your professional profile and find opportunities.
-                  </p>
-                  <Button disabled>Generate Resume</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Progress Tab */}
-          <TabsContent value="progress" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>📈 Progress Tracking</CardTitle>
-                <CardDescription>
-                  Track your learning progress and analytics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Progress Analytics Coming Soon</h3>
-                  <p className="text-muted-foreground mb-4">
-                    This feature will provide detailed progress tracking and analytics.
-                  </p>
-                  <Button disabled>View Progress</Button>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Learning & Career Tab */}
+          <TabsContent value="learning-career" className="space-y-6">
+            <LearningAndCareerTab 
+              currentSkills={assessedSkills} 
+              targetRole={targetRole}
+            />
           </TabsContent>
 
           {/* Chat Tab */}
