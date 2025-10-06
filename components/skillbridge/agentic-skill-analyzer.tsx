@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { GapAnalyzerAgent } from '@/lib/agents/gap-analyzer';
 import { StickyAgentStatus } from './sticky-agent-status';
 import { InteractiveSkillCard } from './interactive-skill-card';
+import { LandingExplanation } from './landing-explanation';
 import { 
   Github, 
   Brain, 
@@ -310,8 +311,12 @@ export function AgenticSkillAnalyzer() {
         }}
       />
 
-      {/* Hero Input Section */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
+      {/* Landing Explanation Section */}
+      <LandingExplanation />
+
+      {/* Analysis Input Section */}
+      <div id="analysis-input" className="scroll-mt-20">
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -388,6 +393,7 @@ export function AgenticSkillAnalyzer() {
           )}
         </CardContent>
       </Card>
+      </div>
 
       {/* Main Results Grid */}
       {actionLogs.length > 0 && (
