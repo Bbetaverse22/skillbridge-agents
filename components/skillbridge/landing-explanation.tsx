@@ -29,60 +29,60 @@ export function LandingExplanation() {
   return (
     <div className="space-y-12 py-8">
       {/* Hero Section */}
-      <div className="text-center space-y-6">
-        <Badge variant="outline" className="text-sm px-4 py-2">
+      <div id="features" className="text-center space-y-6">
+        <Badge className="text-sm px-4 py-2 bg-purple-600/20 text-purple-300 border-purple-500/50">
           <Sparkles className="h-4 w-4 mr-2 inline" />
           V1 Capstone Project
         </Badge>
         
-        <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+        <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
           SkillBridge
         </h1>
         
-        <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-          The first <span className="font-semibold text-foreground">agentic AI platform</span> that doesn't just analyze your skills — 
-          it <span className="font-semibold text-foreground">takes action</span> to improve your career.
+        <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
+          The first <span className="font-semibold text-white">agentic AI platform</span> that doesn't just analyze your skills — 
+          it <span className="font-semibold text-white">takes action</span> to improve your career.
         </p>
 
         <div className="flex flex-wrap justify-center gap-4 text-sm">
-          <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
-            <Brain className="h-4 w-4 text-blue-600" />
-            <span className="font-medium">LangGraph Agents</span>
+          <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-600/20 border border-blue-500/50">
+            <Brain className="h-4 w-4 text-blue-400" />
+            <span className="font-medium text-blue-300">LangGraph Agents</span>
           </div>
-          <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800">
-            <Github className="h-4 w-4 text-purple-600" />
-            <span className="font-medium">GitHub MCP</span>
+          <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-purple-600/20 border border-purple-500/50">
+            <Github className="h-4 w-4 text-purple-400" />
+            <span className="font-medium text-purple-300">GitHub MCP</span>
           </div>
-          <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-            <TrendingUp className="h-4 w-4 text-green-600" />
-            <span className="font-medium">Real-time Research</span>
+          <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-green-600/20 border border-green-500/50">
+            <TrendingUp className="h-4 w-4 text-green-400" />
+            <span className="font-medium text-green-300">Real-time Research</span>
           </div>
         </div>
       </div>
 
       {/* Problem Statement */}
-      <Card className="max-w-4xl mx-auto border-2 border-orange-200 dark:border-orange-800">
+      <Card className="max-w-4xl mx-auto border-2 border-orange-500/50 bg-orange-950/20 backdrop-blur">
         <CardContent className="p-8 space-y-4">
-          <h2 className="text-2xl font-bold">💡 The Challenge</h2>
-          <p className="text-lg text-muted-foreground">
-            Traditional career tools give you <span className="font-semibold text-foreground">reports and recommendations</span>. 
+          <h2 className="text-2xl font-bold text-white">💡 The Challenge</h2>
+          <p className="text-lg text-gray-300">
+            Traditional career tools give you <span className="font-semibold text-white">reports and recommendations</span>. 
             But then what? You're left to figure out the next steps on your own.
           </p>
-          <ul className="space-y-2 text-muted-foreground">
+          <ul className="space-y-2 text-gray-300">
             <li className="flex items-start space-x-2">
-              <span className="text-orange-600 mt-1">•</span>
+              <span className="text-orange-400 mt-1">•</span>
               <span>Generic advice that doesn't match your actual GitHub portfolio</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-orange-600 mt-1">•</span>
+              <span className="text-orange-400 mt-1">•</span>
               <span>No real-time job market data or salary insights</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-orange-600 mt-1">•</span>
+              <span className="text-orange-400 mt-1">•</span>
               <span>Static recommendations that never adapt to your progress</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-orange-600 mt-1">•</span>
+              <span className="text-orange-400 mt-1">•</span>
               <span>You have to manually improve your portfolio yourself</span>
             </li>
           </ul>
@@ -90,25 +90,25 @@ export function LandingExplanation() {
       </Card>
 
       {/* Solution */}
-      <Card className="max-w-4xl mx-auto border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+      <Card className="max-w-4xl mx-auto border-2 border-blue-500/50 bg-gradient-to-br from-blue-950/30 to-purple-950/30 backdrop-blur">
         <CardContent className="p-8 space-y-4">
-          <h2 className="text-2xl font-bold">✅ The SkillBridge Solution</h2>
-          <p className="text-lg text-muted-foreground">
-            An <span className="font-semibold text-foreground">agentic AI system</span> that goes beyond analysis. 
-            It <span className="font-semibold text-primary">researches</span> the market, 
-            <span className="font-semibold text-primary"> creates</span> GitHub issues, 
-            and <span className="font-semibold text-primary">monitors</span> your progress — all automatically.
+          <h2 className="text-2xl font-bold text-white">✅ The SkillBridge Solution</h2>
+          <p className="text-lg text-gray-300">
+            An <span className="font-semibold text-white">agentic AI system</span> that goes beyond analysis. 
+            It <span className="font-semibold text-blue-400">researches</span> the market, 
+            <span className="font-semibold text-purple-400"> creates</span> GitHub issues, 
+            and <span className="font-semibold text-pink-400">monitors</span> your progress — all automatically.
           </p>
         </CardContent>
       </Card>
 
       {/* How It Works - 4 Phases */}
-      <div className="max-w-5xl mx-auto space-y-6">
-        <h2 className="text-3xl font-bold text-center mb-8">How It Works: The Agentic Loop</h2>
+      <div id="how-it-works" className="max-w-5xl mx-auto space-y-6">
+        <h2 className="text-3xl font-bold text-center mb-8 text-white">How It Works: The Agentic Loop</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Phase 1 */}
-          <Card className="border-2 border-blue-200 dark:border-blue-800 hover:shadow-lg transition-shadow">
+          <Card className="border-2 border-blue-500/50 bg-blue-950/20 backdrop-blur hover:shadow-xl hover:shadow-blue-500/20 transition-all">
             <CardContent className="p-6 space-y-3">
               <div className="flex items-center space-x-3">
                 <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-950">
