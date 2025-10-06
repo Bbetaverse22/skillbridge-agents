@@ -5,7 +5,7 @@
  * Single-page agentic workflow with LangGraph-powered Portfolio Builder
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { GapAnalyzerAgent } from '@/lib/agents/gap-analyzer';
 import { 
   Github, 
   Brain, 
@@ -57,6 +58,8 @@ export function AgenticSkillAnalyzer() {
   const [portfolioTasks, setPortfolioTasks] = useState<PortfolioTask[]>([]);
   const [careerInsights, setCareerInsights] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  const gapAnalyzer = useMemo(() => new GapAnalyzerAgent(), []);
 
   const addLog = (type: ActionLog['type'], message: string, icon?: React.ReactNode) => {
     const log: ActionLog = {
@@ -68,7 +71,7 @@ export function AgenticSkillAnalyzer() {
     setActionLogs(prev => [log, ...prev].slice(0, 50)); // Keep last 50 logs
   };
 
-  const simulateAgenticWorkflow = async () => {
+  const runAgenticWorkflow = async () => {
     if (!githubUsername.trim()) {
       setError('Please enter a GitHub username');
       return;
@@ -83,45 +86,96 @@ export function AgenticSkillAnalyzer() {
     setCareerInsights(null);
 
     try {
-      // Phase 1: GitHub Analysis
+      // Phase 1: REAL GitHub Analysis (using existing MCP functionality)
       addLog('info', 'Starting GitHub profile analysis...', <Github className="h-4 w-4" />);
       setProgress(10);
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       addLog('info', `Fetching repositories for @${githubUsername}`, <Search className="h-4 w-4" />);
-      setProgress(20);
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      setProgress(15);
 
-      addLog('success', 'Found 15 public repositories', <CheckCircle2 className="h-4 w-4" />);
-      addLog('info', 'Analyzing tech stack: React, TypeScript, Python, Node.js', <Code className="h-4 w-4" />);
+      // Fetch user's most recent repository
+      const username = githubUsername.trim();
+      const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=1`);
+      
+      if (!reposResponse.ok) {
+        if (reposResponse.status === 404) {
+          throw new Error(`GitHub user "${username}" not found`);
+        } else if (reposResponse.status === 403) {
+          throw new Error('GitHub API rate limit exceeded. Please try again in a few minutes.');
+        } else {
+          throw new Error(`Failed to fetch GitHub profile (Status: ${reposResponse.status})`);
+        }
+      }
+      
+      const repos = await reposResponse.json();
+      if (!repos || repos.length === 0) {
+        throw new Error(`No public repositories found for user "${username}"`);
+      }
+
+      const repoUrl = repos[0].html_url;
+      addLog('success', `Found repository: ${repos[0].name}`, <CheckCircle2 className="h-4 w-4" />);
+      setProgress(25);
+
+      addLog('info', 'Analyzing repository tech stack...', <Code className="h-4 w-4" />);
       setProgress(30);
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Phase 2: Market Research
+      // Use REAL GitHub analysis
+      const githubAnalysis = await gapAnalyzer.analyzeGitHubRepository(repoUrl);
+      
+      addLog('success', `Detected languages: ${githubAnalysis.languages.join(', ')}`, <CheckCircle2 className="h-4 w-4" />);
+      if (githubAnalysis.frameworks.length > 0) {
+        addLog('info', `Frameworks: ${githubAnalysis.frameworks.join(', ')}`, <Code className="h-4 w-4" />);
+      }
+      setProgress(40);
+
+      // Generate REAL skill assessment
+      addLog('info', 'Generating skill gap analysis...', <Target className="h-4 w-4" />);
+      setProgress(50);
+      
+      const gapAnalysis = await gapAnalyzer.generateAutomaticSkillAssessment(githubAnalysis);
+      
+      addLog('success', `Overall skill score: ${gapAnalysis.overallScore}%`, <CheckCircle2 className="h-4 w-4" />);
+      addLog('info', `Identified ${gapAnalysis.skillGaps.length} skill gaps`, <Target className="h-4 w-4" />);
+      setProgress(55);
+
+      // Store results on server
+      try {
+        await fetch('/api/skill-gaps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'user_123',
+            githubAnalysis: githubAnalysis,
+            skillAssessment: gapAnalysis,
+          }),
+        });
+        addLog('success', 'Skill analysis stored for future reference', <CheckCircle2 className="h-4 w-4" />);
+      } catch (storeError) {
+        addLog('warning', 'Could not store analysis data', <AlertCircle className="h-4 w-4" />);
+      }
+
+      // Set REAL skill gaps
+      const topGaps = gapAnalysis.skillGaps.slice(0, 5).map(sg => ({
+        name: sg.skill.name,
+        currentLevel: sg.skill.currentLevel,
+        targetLevel: sg.skill.targetLevel,
+        priority: Math.round(sg.priority),
+        gap: sg.gap
+      }));
+      setSkillGaps(topGaps);
+      setProgress(60);
+
+      // Phase 2: Market Research (SIMULATED - to be implemented with LangGraph)
       setAgentStatus('RESEARCHING');
       addLog('info', 'Starting deep market research...', <Brain className="h-4 w-4" />);
-      setProgress(40);
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      addLog('info', 'Scraping LinkedIn for Software Engineer roles...', <TrendingUp className="h-4 w-4" />);
-      setProgress(50);
+      addLog('info', 'Scraping LinkedIn for relevant roles...', <TrendingUp className="h-4 w-4" />);
+      setProgress(65);
       await new Promise(resolve => setTimeout(resolve, 1200));
 
-      addLog('success', 'Analyzed 150+ job postings', <CheckCircle2 className="h-4 w-4" />);
-      addLog('info', 'Identifying skill gaps vs. market requirements', <Target className="h-4 w-4" />);
-      setProgress(60);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Set skill gaps (mock data)
-      const mockGaps = [
-        { name: 'Kubernetes', currentLevel: 2, targetLevel: 4, priority: 9, gap: 2 },
-        { name: 'System Design', currentLevel: 3, targetLevel: 5, priority: 8, gap: 2 },
-        { name: 'Testing (Jest)', currentLevel: 2, targetLevel: 4, priority: 7, gap: 2 },
-        { name: 'Docker', currentLevel: 3, targetLevel: 5, priority: 7, gap: 2 },
-        { name: 'CI/CD Pipelines', currentLevel: 1, targetLevel: 4, priority: 6, gap: 3 }
-      ];
-      setSkillGaps(mockGaps);
-      addLog('success', `Identified ${mockGaps.length} high-priority skill gaps`, <AlertCircle className="h-4 w-4" />);
+      addLog('success', 'Analyzed 150+ job postings (simulated)', <CheckCircle2 className="h-4 w-4" />);
+      setProgress(70);
 
       // Phase 3: Portfolio Analysis & Planning
       setAgentStatus('PLANNING');
@@ -256,8 +310,8 @@ export function AgenticSkillAnalyzer() {
               value={githubUsername}
               onChange={(e) => setGithubUsername(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && githubUsername.trim() && agentStatus === 'IDLE') {
-                  simulateAgenticWorkflow();
+                if (e.key === 'Enter' && githubUsername.trim() && (agentStatus === 'IDLE' || agentStatus === 'ERROR' || agentStatus === 'COMPLETE')) {
+                  runAgenticWorkflow();
                 }
               }}
               className="flex-1 h-12 text-base"
@@ -265,7 +319,7 @@ export function AgenticSkillAnalyzer() {
             />
             <Button 
               size="lg" 
-              onClick={simulateAgenticWorkflow}
+              onClick={runAgenticWorkflow}
               disabled={!githubUsername.trim() || (agentStatus !== 'IDLE' && agentStatus !== 'ERROR' && agentStatus !== 'COMPLETE')}
               className="px-8"
             >
