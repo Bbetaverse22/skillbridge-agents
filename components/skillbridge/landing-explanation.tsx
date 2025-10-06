@@ -177,22 +177,28 @@ export function LandingExplanation() {
                 <div>
                   <Badge variant="outline" className="mb-1">Phase 3</Badge>
                   <h3 className="font-bold text-lg">Autonomous Actions</h3>
+                  <Badge variant="secondary" className="text-xs mt-1">
+                    👤 With Your Permission
+                  </Badge>
                 </div>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span>Creates GitHub issues in your repos with improvement tasks</span>
+                  <span>Creates GitHub issues in your repos <span className="font-semibold text-foreground">(after approval)</span></span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span>Generates README drafts for undocumented projects</span>
+                  <span>Generates README drafts <span className="font-semibold text-foreground">(you review first)</span></span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span>Suggests code quality improvements and best practices</span>
+                  <span>Suggests code quality improvements <span className="font-semibold text-foreground">(optional)</span></span>
                 </li>
               </ul>
+              <div className="pt-2 border-t text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">You're in control:</span> The agent prepares actions but waits for your approval before making any changes to your repositories.
+              </div>
               <Badge variant="secondary" className="text-xs">🚧 Simulated - V1 Implementation</Badge>
             </CardContent>
           </Card>
@@ -251,7 +257,7 @@ export function LandingExplanation() {
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Takes autonomous actions (creates issues, PRs)</span>
+                  <span>Takes autonomous actions <span className="text-muted-foreground">(with your approval)</span></span>
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -267,7 +273,7 @@ export function LandingExplanation() {
                 </li>
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Decision-making at each step</span>
+                  <span>Human-in-the-loop controls</span>
                 </li>
               </ul>
             </div>
