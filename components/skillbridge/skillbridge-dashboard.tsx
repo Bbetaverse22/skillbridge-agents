@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Brain, Github, Sparkles, Menu, X } from "lucide-react";
+import { Brain, Github, Menu, X } from "lucide-react";
 import { AgenticSkillAnalyzer } from "./agentic-skill-analyzer";
 import { useState } from "react";
 
@@ -136,39 +136,7 @@ export default function SkillBridgeDashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        {/* Hero Section */}
-        <section className="space-y-6 py-8 text-center">
-          <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-sm">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="font-medium">V1 Capstone Project</span>
-          </div>
-          
-          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Agentic Career Development
-          </h2>
-          
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Unlike traditional AI that just generates reports, SkillBridge <span className="font-semibold text-foreground">takes action</span>.
-            Deep market research + autonomous portfolio improvements powered by LangGraph agents.
-          </p>
-          
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-            <span className="flex items-center space-x-2">
-              <Brain className="h-4 w-4 text-purple-600" />
-              <span>LangGraph Workflows</span>
-            </span>
-            <span className="flex items-center space-x-2">
-              <Github className="h-4 w-4 text-blue-600" />
-              <span>GitHub MCP Integration</span>
-            </span>
-            <span className="flex items-center space-x-2">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <span>Real-time Market Research</span>
-            </span>
-          </div>
-        </section>
-
-        {/* V1 Main Component */}
+        {/* V1 Main Component (includes LandingExplanation) */}
         <AgenticSkillAnalyzer />
       </main>
     </div>
