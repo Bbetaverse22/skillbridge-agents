@@ -59,28 +59,54 @@ Built with advanced AI agents for intelligent career development and portfolio i
    ```bash
    cp .env.example .env.local
    ```
-   
+
    Edit `.env.local` and add your API keys:
    ```env
    # Required
    OPENAI_API_KEY=your_openai_api_key_here
-   
-   # Optional - for RAG features
-   VECTORIZE_ORG_ID=your_vectorize_org_id
-   VECTORIZE_PIPELINE_ID=your_vectorize_pipeline_id
-   VECTORIZE_ACCESS_TOKEN=your_vectorize_access_token
-   
+
+   # Database (Prisma Postgres with Accelerate)
+   DATABASE_URL=your_postgres_connection_url
+   PRISMA_DATABASE_URL=your_prisma_accelerate_url
+
+   # GitHub OAuth (for multi-user support)
+   GITHUB_CLIENT_ID=your_github_oauth_client_id
+   GITHUB_CLIENT_SECRET=your_github_oauth_client_secret
+   NEXTAUTH_SECRET=generate_with_openssl_rand_base64_32
+   NEXTAUTH_URL=http://localhost:3000
+
    # Optional - increases GitHub API rate limits
    GITHUB_TOKEN=your_github_personal_access_token_here
    ```
 
-4. **Start development server**
+4. **Set up database**
+   ```bash
+   # Generate Prisma Client
+   npx prisma generate
+
+   # Run migrations (after setting up Vercel Postgres)
+   npx prisma migrate dev --name init
+   ```
+
+5. **Start development servers**
+
+   **Option A: Next.js only**
    ```bash
    pnpm dev
    ```
 
-5. **Open your browser**
-- App: http://localhost:3000 (Next.js will pick a free port if needed)
+   **Option B: Next.js + LangGraph Platform (recommended for development)**
+   ```bash
+   # Terminal 1: Start Next.js
+   pnpm dev
+
+   # Terminal 2: Start LangGraph Platform
+   pnpm langgraph:dev
+   ```
+
+6. **Open your browser**
+   - Next.js App: http://localhost:3000
+   - LangGraph Platform: http://localhost:2024 (if running)
 
 ## 💡 How It Works: The Agentic Loop
 
@@ -109,6 +135,65 @@ Built with advanced AI agents for intelligent career development and portfolio i
 
 ## 🔧 Configuration
 
+### Database Setup (Prisma Postgres Free Tier)
+
+SkillBridge.ai uses **Prisma Postgres** for data persistence:
+
+**Free Tier Includes:**
+- ✅ 5 GB storage (supports 1000s of skill gap analyses)
+- ✅ 10k queries/day
+- ✅ **No credit card required**
+- ✅ Built-in connection pooling with Prisma Accelerate
+- ✅ Perfect for V1 + early production
+
+**Setup (2 minutes):**
+
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Navigate to **Storage** → **Create Database** → **Prisma Postgres**
+3. Select **Free Tier**
+4. Copy the following environment variables to `.env.local`:
+   - `DATABASE_URL` (direct connection URL)
+   - `PRISMA_DATABASE_URL` (Prisma Accelerate URL with connection pooling)
+5. Run migrations:
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev --name init
+   ```
+
+**That's it!** No payment info needed.
+
+### LangGraph Research Agent
+
+SkillBridge.ai uses **LangGraph** for autonomous research workflows:
+
+**What it does:**
+- Searches for learning resources based on skill gaps
+- Evaluates resource quality and relevance
+- Finds GitHub example projects
+- Makes autonomous decisions to retry searches if confidence is low
+- Synthesizes recommendations for Portfolio Builder
+
+**Running LangGraph Platform:**
+
+LangGraph Platform provides a visual interface to develop, test, and debug your agent workflows.
+
+```bash
+# Start LangGraph development server (with UI at http://localhost:2024)
+pnpm langgraph:dev
+
+# Or run in background
+pnpm langgraph:up
+```
+
+**Features:**
+- 🎨 Visual graph editor and inspector
+- 🐛 Step-by-step debugging
+- 📊 Real-time execution traces
+- 🔄 Hot reloading on code changes
+- 🧪 Test with different inputs
+
+The research agent is defined in `lib/agents/langgraph/research-agent.ts` and configured in `langgraph.json`.
+
 ### Environment Variables
 
 **Required for V1:**
@@ -116,9 +201,29 @@ Built with advanced AI agents for intelligent career development and portfolio i
 # AI Model Access
 OPENAI_API_KEY=your_openai_api_key_here
 
-# GitHub Integration (Required for Portfolio Builder)
+# Database (Prisma Postgres with Accelerate)
+DATABASE_URL=your_postgres_connection_url
+PRISMA_DATABASE_URL=your_prisma_accelerate_url
+
+# GitHub OAuth (for multi-user authentication)
+GITHUB_CLIENT_ID=your_oauth_client_id
+GITHUB_CLIENT_SECRET=your_oauth_client_secret
+NEXTAUTH_SECRET=generate_with_openssl_rand_base64_32
+NEXTAUTH_URL=http://localhost:3000
+```
+
+**Optional:**
+```env
+# GitHub Personal Access Token (increases API rate limits)
 GITHUB_TOKEN=your_github_personal_access_token_here
 ```
+
+**How to get GitHub OAuth credentials:**
+1. Go to GitHub Settings → Developer settings → OAuth Apps
+2. Create new OAuth App:
+   - Homepage URL: `http://localhost:3000`
+   - Callback URL: `http://localhost:3000/api/auth/github/callback`
+3. Copy Client ID and Client Secret to `.env.local`
 
 **How to get a GitHub Token:**
 1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
@@ -168,20 +273,29 @@ See `V1_DEVELOPMENT_PLAN.md` for implementation roadmap.
 
 ### Backend & AI
 - **AI SDK 5 (Vercel)**: Streamable AI responses and tool calling
-- **Advanced Workflow Management**: Stateful agentic workflows and decision loops
+- **LangGraph**: Autonomous agent workflows with state management and decision loops
 - **OpenAI GPT-4**: Language model for analysis and generation
-- **Standardized Tool Protocol**: Flexible tool integrations
+- **Prisma ORM**: Type-safe database access with PostgreSQL
+- **NextAuth.js**: Authentication with GitHub OAuth
+
+### Database & Storage
+- **Prisma Postgres**: Serverless PostgreSQL with Prisma Accelerate (connection pooling + caching)
+- **Free Tier**: 5 GB storage, 10k queries/day, no credit card required
+- **11 Data Models**: Users, skill gaps, technologies, recommendations, research results, GitHub issues
 
 ### Integrations
 - **GitHub API**: Repository analysis, issue creation, profile enhancement
-- **Web Scraping**: Job boards, salary data, learning resources
-- **File-based Storage**: Simple persistence for skill profiles
+- **Web Scraping**: Job boards, salary data, learning resources (planned)
+- **LangGraph Platform**: Visual agent development and debugging
 
 ## 🗺️ Roadmap
 
 ### ✅ V1 (Capstone - 3 Weeks)
 **Focus**: Research + Action fundamentals
-- ✅ GitHub analysis and skill gap detection
+- ✅ LangGraph agent framework setup
+- ✅ Database schema and migrations (Prisma Postgres)
+- ✅ GitHub OAuth credentials configured
+- 🚧 Research agent implementation (LangGraph)
 - 🚧 Portfolio Builder Agent
 - 🚧 Deep career research with web scraping
 - 🚧 Autonomous GitHub issue creation
@@ -189,10 +303,12 @@ See `V1_DEVELOPMENT_PLAN.md` for implementation roadmap.
 
 **Deliverables**: Working demo with real GitHub integration, research capabilities, and autonomous actions
 
+**Progress**: Infrastructure complete - LangGraph Platform, database, and authentication ready
+
 ### 🔮 V2 (Future Enhancements)
 **Focus**: Scale and intelligence
-- Multi-user support with authentication
-- Database-backed persistence (PostgreSQL)
+- ✅ Multi-user support with NextAuth.js (in progress)
+- ✅ Database-backed persistence (Prisma Postgres - complete)
 - Advanced tool integrations (LinkedIn, code quality tools)
 - ML-powered skill matching
 - Community features (share learning paths)

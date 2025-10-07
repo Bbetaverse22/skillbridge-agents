@@ -218,3 +218,8 @@ test-sanitizer.js
 # Build artifacts
 *.tgz
 *.tar.gz
+/lib/generated/prisma
+
+# LangGraph API
+.langgraph_api
+.vercel
