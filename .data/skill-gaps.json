@@ -1,35 +1,64 @@
 {
-  "skillgap_1759799876677_75r89m72b": {
-    "id": "skillgap_1759799876677_75r89m72b",
+  "skillgap_1759807564946_s4m9nrtzz": {
+    "id": "skillgap_1759807564946_s4m9nrtzz",
     "userId": "user_123",
     "githubAnalysis": {
-      "repository": "https://github.com/octocat/Hello-World",
-      "technologies": [],
-      "frameworks": [],
-      "languages": [],
-      "tools": [],
+      "repository": "https://github.com/facebook/openzl",
+      "technologies": [
+        "C",
+        "C++",
+        "Python",
+        "TypeScript",
+        "Starlark"
+      ],
+      "frameworks": [
+        "Node.js",
+        "TypeScript",
+        "Python"
+      ],
+      "languages": [
+        "C",
+        "C++",
+        "Python",
+        "TypeScript",
+        "Starlark",
+        "CMake",
+        "Makefile",
+        "Assembly",
+        "CSS",
+        "PowerShell",
+        "Shell",
+        "Thrift",
+        "Batchfile",
+        "JavaScript",
+        "HTML"
+      ],
+      "tools": [
+        "GitHub Actions"
+      ],
       "skillLevel": "advanced",
       "recommendations": [
-        "Focus on mastering the primary programming language",
-        "Learn version control best practices with Git",
-        "Practice writing clean, maintainable code",
-        "Explore testing frameworks and write unit tests"
+        "Explore Django or FastAPI for web development",
+        "Learn pandas and numpy for data science",
+        "Practice with virtual environments and pip",
+        "Master modern ES6+ features and async programming",
+        "Learn a frontend framework like React, Vue, or Angular"
       ]
     },
     "skillAssessment": {
-      "overallScore": 20,
+      "overallScore": 93,
       "skillGaps": [
         {
           "skill": {
             "id": "programming",
             "name": "Programming Languages",
-            "currentLevel": 1,
+            "currentLevel": 4,
             "targetLevel": 5,
             "importance": 5,
             "category": "technical"
           },
-          "gap": 4,
-          "priority": 20,
+          "gap": 1,
+          "priority": 5,
           "recommendations": [
             "Practice coding daily with platforms like LeetCode or HackerRank",
             "Build personal projects to apply programming concepts",
@@ -40,18 +69,70 @@
           "skill": {
             "id": "frameworks",
             "name": "Frameworks & Libraries",
-            "currentLevel": 1,
+            "currentLevel": 4,
             "targetLevel": 5,
             "importance": 5,
             "category": "technical"
           },
-          "gap": 4,
-          "priority": 20,
+          "gap": 1,
+          "priority": 5,
           "recommendations": [
             "Follow official documentation and tutorials",
             "Build a complete project using the framework",
             "Join community forums and attend meetups"
           ]
+        },
+        {
+          "skill": {
+            "id": "tech-javascript",
+            "name": "JavaScript",
+            "currentLevel": 4.8,
+            "targetLevel": 5,
+            "importance": 5,
+            "category": "technical"
+          },
+          "gap": 0.20000000000000018,
+          "priority": 1.0000000000000009,
+          "recommendations": []
+        },
+        {
+          "skill": {
+            "id": "tech-python",
+            "name": "Python",
+            "currentLevel": 5,
+            "targetLevel": 5,
+            "importance": 5,
+            "category": "technical"
+          },
+          "gap": 0,
+          "priority": 0,
+          "recommendations": []
+        },
+        {
+          "skill": {
+            "id": "tech-typescript",
+            "name": "TypeScript",
+            "currentLevel": 5,
+            "targetLevel": 5,
+            "importance": 5,
+            "category": "technical"
+          },
+          "gap": 0,
+          "priority": 0,
+          "recommendations": []
+        },
+        {
+          "skill": {
+            "id": "framework-nodejs",
+            "name": "Node.js",
+            "currentLevel": 5,
+            "targetLevel": 5,
+            "importance": 5,
+            "category": "technical"
+          },
+          "gap": 0,
+          "priority": 0,
+          "recommendations": []
         }
       ],
       "categories": [
@@ -220,28 +301,55 @@
       ],
       "learningPath": [
         "Phase 1: Foundation (Weeks 1-4)",
-        "- Focus on Programming Languages: Practice coding daily with platforms like LeetCode or HackerRank",
-        "- Focus on Frameworks & Libraries: Follow official documentation and tutorials",
         "Phase 4: Application (Ongoing)",
         "- Apply skills in real-world projects",
         "- Seek feedback and continue learning"
       ],
       "githubAnalysis": {
-        "repository": "https://github.com/octocat/Hello-World",
-        "technologies": [],
-        "frameworks": [],
-        "languages": [],
-        "tools": [],
+        "repository": "https://github.com/facebook/openzl",
+        "technologies": [
+          "C",
+          "C++",
+          "Python",
+          "TypeScript",
+          "Starlark"
+        ],
+        "frameworks": [
+          "Node.js",
+          "TypeScript",
+          "Python"
+        ],
+        "languages": [
+          "C",
+          "C++",
+          "Python",
+          "TypeScript",
+          "Starlark",
+          "CMake",
+          "Makefile",
+          "Assembly",
+          "CSS",
+          "PowerShell",
+          "Shell",
+          "Thrift",
+          "Batchfile",
+          "JavaScript",
+          "HTML"
+        ],
+        "tools": [
+          "GitHub Actions"
+        ],
         "skillLevel": "advanced",
         "recommendations": [
-          "Focus on mastering the primary programming language",
-          "Learn version control best practices with Git",
-          "Practice writing clean, maintainable code",
-          "Explore testing frameworks and write unit tests"
+          "Explore Django or FastAPI for web development",
+          "Learn pandas and numpy for data science",
+          "Practice with virtual environments and pip",
+          "Master modern ES6+ features and async programming",
+          "Learn a frontend framework like React, Vue, or Angular"
         ]
       }
     },
-    "createdAt": "2025-10-07T01:17:56.677Z",
-    "lastAccessed": "2025-10-07T01:17:56.677Z"
+    "createdAt": "2025-10-07T03:26:04.946Z",
+    "lastAccessed": "2025-10-07T03:26:04.946Z"
   }
 }

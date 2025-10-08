@@ -17,6 +17,9 @@ import { GapAnalyzerAgent } from '@/lib/agents/gap-analyzer';
 import { StickyAgentStatus } from './sticky-agent-status';
 import { InteractiveSkillCard } from './interactive-skill-card';
 import { LandingExplanation } from './landing-explanation';
+import { AnimatedHero } from './animated-hero';
+import { AnimatedFeatures } from './animated-features';
+import { AnimatedHowItWorks } from './animated-how-it-works';
 import { 
   Github, 
   Brain, 
@@ -311,11 +314,19 @@ export function AgenticSkillAnalyzer() {
         }}
       />
 
-      {/* Landing Explanation Section */}
-      <LandingExplanation />
+      {/* Animated Hero Section */}
+      <AnimatedHero />
+
+      {/* Animated Features Section */}
+      <div id="features">
+        <AnimatedFeatures />
+      </div>
+
+      {/* Animated How It Works Section */}
+      <AnimatedHowItWorks />
 
       {/* Analysis Input Section */}
-      <div id="analysis-input" className="scroll-mt-20">
+      <div id="demo" className="scroll-mt-20">
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
         <CardHeader>
           <div className="flex items-center justify-between">
