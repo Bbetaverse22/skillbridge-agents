@@ -3,14 +3,27 @@
 import { motion } from "framer-motion";
 import { Brain, Sparkles, Zap, Target, TrendingUp, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 export function AnimatedHero() {
-  // Floating orbs animation
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Floating orbs animation - use consistent seed-based positions
   const floatingOrbs = [
-    { size: 300, duration: 20, delay: 0, color: "from-blue-500/20 to-purple-500/20" },
-    { size: 200, duration: 15, delay: 2, color: "from-purple-500/20 to-pink-500/20" },
-    { size: 250, duration: 18, delay: 4, color: "from-cyan-500/20 to-blue-500/20" },
+    { size: 300, duration: 20, delay: 0, color: "from-blue-500/20 to-purple-500/20", seed: 1 },
+    { size: 200, duration: 15, delay: 2, color: "from-purple-500/20 to-pink-500/20", seed: 2 },
+    { size: 250, duration: 18, delay: 4, color: "from-cyan-500/20 to-blue-500/20", seed: 3 },
   ];
+
+  // Seeded random function for consistent SSR/client positions
+  const seededRandom = (seed: number) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
 
   // Icon float animation
   const iconVariants = {
@@ -37,45 +50,55 @@ export function AnimatedHero() {
     <div className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden">
-        {floatingOrbs.map((orb, i) => (
-          <motion.div
-            key={i}
-            className={`absolute rounded-full bg-gradient-to-br ${orb.color} blur-3xl`}
-            style={{
-              width: orb.size,
-              height: orb.size,
-            }}
-            initial={{
-              x: Math.random() * 100 - 50 + "%",
-              y: Math.random() * 100 - 50 + "%",
-              scale: 0
-            }}
-            animate={{
-              x: [
-                Math.random() * 100 - 50 + "%",
-                Math.random() * 100 - 50 + "%",
-                Math.random() * 100 - 50 + "%",
-              ],
-              y: [
-                Math.random() * 100 - 50 + "%",
-                Math.random() * 100 - 50 + "%",
-                Math.random() * 100 - 50 + "%",
-              ],
-              scale: [0, 1, 1, 0.8, 1],
-            }}
-            transition={{
-              duration: orb.duration,
-              repeat: Infinity,
-              delay: orb.delay,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
+        {mounted && floatingOrbs.map((orb, i) => {
+          // Use seeded random for consistent positions
+          const initialX = seededRandom(orb.seed * 10) * 100 - 50;
+          const initialY = seededRandom(orb.seed * 20) * 100 - 50;
+          const x1 = seededRandom(orb.seed * 30) * 100 - 50;
+          const y1 = seededRandom(orb.seed * 40) * 100 - 50;
+          const x2 = seededRandom(orb.seed * 50) * 100 - 50;
+          const y2 = seededRandom(orb.seed * 60) * 100 - 50;
+
+          return (
+            <motion.div
+              key={i}
+              className={`absolute rounded-full bg-gradient-to-br ${orb.color} blur-3xl`}
+              style={{
+                width: orb.size,
+                height: orb.size,
+              }}
+              initial={{
+                x: `${initialX}%`,
+                y: `${initialY}%`,
+                scale: 0
+              }}
+              animate={{
+                x: [
+                  `${initialX}%`,
+                  `${x1}%`,
+                  `${x2}%`,
+                ],
+                y: [
+                  `${initialY}%`,
+                  `${y1}%`,
+                  `${y2}%`,
+                ],
+                scale: [0, 1, 1, 0.8, 1],
+              }}
+              transition={{
+                duration: orb.duration,
+                repeat: Infinity as number,
+                delay: orb.delay,
+                ease: "easeInOut",
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* Floating icons */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
-        {icons.map(({ Icon, delay, position }, i) => (
+        {mounted && icons.map(({ Icon, delay, position }, i) => (
           <motion.div
             key={i}
             className={`absolute ${position} opacity-10`}

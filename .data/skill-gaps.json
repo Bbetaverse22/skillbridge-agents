@@ -1,52 +1,55 @@
 {
-  "skillgap_1759807564946_s4m9nrtzz": {
-    "id": "skillgap_1759807564946_s4m9nrtzz",
+  "skillgap_1759979821061_ot0jtxum0": {
+    "id": "skillgap_1759979821061_ot0jtxum0",
     "userId": "user_123",
     "githubAnalysis": {
-      "repository": "https://github.com/facebook/openzl",
+      "repository": "https://github.com/facebook/react-native",
       "technologies": [
-        "C",
         "C++",
-        "Python",
-        "TypeScript",
-        "Starlark"
+        "Kotlin",
+        "JavaScript",
+        "Objective-C++",
+        "Objective-C",
+        "react"
       ],
       "frameworks": [
         "Node.js",
         "TypeScript",
-        "Python"
+        "React",
+        "Gradle"
       ],
       "languages": [
-        "C",
         "C++",
-        "Python",
-        "TypeScript",
-        "Starlark",
-        "CMake",
-        "Makefile",
-        "Assembly",
-        "CSS",
-        "PowerShell",
-        "Shell",
-        "Thrift",
-        "Batchfile",
+        "Kotlin",
         "JavaScript",
-        "HTML"
+        "Objective-C++",
+        "Objective-C",
+        "Java",
+        "Ruby",
+        "CMake",
+        "TypeScript",
+        "Shell",
+        "C",
+        "Swift",
+        "Assembly",
+        "HTML",
+        "Smarty"
       ],
       "tools": [
-        "GitHub Actions"
+        "GitHub Actions",
+        "Jest/Vitest"
       ],
       "skillLevel": "advanced",
       "recommendations": [
-        "Explore Django or FastAPI for web development",
-        "Learn pandas and numpy for data science",
-        "Practice with virtual environments and pip",
+        "Master Spring Boot and Spring Security for enterprise development",
+        "Learn Maven or Gradle for dependency management",
+        "Practice design patterns and SOLID principles",
         "Master modern ES6+ features and async programming",
         "Learn a frontend framework like React, Vue, or Angular"
       ]
     },
     "skillAssessment": {
-      "overallScore": 93,
+      "overallScore": 97,
       "skillGaps": [
         {
           "skill": {
@@ -67,23 +70,6 @@
         },
         {
           "skill": {
-            "id": "frameworks",
-            "name": "Frameworks & Libraries",
-            "currentLevel": 4,
-            "targetLevel": 5,
-            "importance": 5,
-            "category": "technical"
-          },
-          "gap": 1,
-          "priority": 5,
-          "recommendations": [
-            "Follow official documentation and tutorials",
-            "Build a complete project using the framework",
-            "Join community forums and attend meetups"
-          ]
-        },
-        {
-          "skill": {
             "id": "tech-javascript",
             "name": "JavaScript",
             "currentLevel": 4.8,
@@ -97,8 +83,8 @@
         },
         {
           "skill": {
-            "id": "tech-python",
-            "name": "Python",
+            "id": "tech-java",
+            "name": "Java",
             "currentLevel": 5,
             "targetLevel": 5,
             "importance": 5,
@@ -125,6 +111,32 @@
           "skill": {
             "id": "framework-nodejs",
             "name": "Node.js",
+            "currentLevel": 5,
+            "targetLevel": 5,
+            "importance": 5,
+            "category": "technical"
+          },
+          "gap": 0,
+          "priority": 0,
+          "recommendations": []
+        },
+        {
+          "skill": {
+            "id": "framework-react",
+            "name": "React",
+            "currentLevel": 5,
+            "targetLevel": 5,
+            "importance": 5,
+            "category": "technical"
+          },
+          "gap": 0,
+          "priority": 0,
+          "recommendations": []
+        },
+        {
+          "skill": {
+            "id": "frameworks",
+            "name": "Frameworks & Libraries",
             "currentLevel": 5,
             "targetLevel": 5,
             "importance": 5,
@@ -292,12 +304,13 @@
         }
       ],
       "recommendations": [
-        "Focus on your top 3 skill gaps: Programming Languages, Frameworks & Libraries",
+        "Focus on your top 3 skill gaps: Programming Languages",
         "Invest time in advanced technical training or certifications",
         "Create a project roadmap to apply the targeted technologies",
         "Set a focused learning plan with milestones for the identified gaps",
         "Share your knowledge by mentoring others or writing technical content",
-        "Consider exploring emerging technologies and architectural patterns"
+        "Consider exploring emerging technologies and architectural patterns",
+        "Explore state management solutions and advanced frontend patterns"
       ],
       "learningPath": [
         "Phase 1: Foundation (Weeks 1-4)",
@@ -306,50 +319,53 @@
         "- Seek feedback and continue learning"
       ],
       "githubAnalysis": {
-        "repository": "https://github.com/facebook/openzl",
+        "repository": "https://github.com/facebook/react-native",
         "technologies": [
-          "C",
           "C++",
-          "Python",
-          "TypeScript",
-          "Starlark"
+          "Kotlin",
+          "JavaScript",
+          "Objective-C++",
+          "Objective-C",
+          "react"
         ],
         "frameworks": [
           "Node.js",
           "TypeScript",
-          "Python"
+          "React",
+          "Gradle"
         ],
         "languages": [
-          "C",
           "C++",
-          "Python",
-          "TypeScript",
-          "Starlark",
-          "CMake",
-          "Makefile",
-          "Assembly",
-          "CSS",
-          "PowerShell",
-          "Shell",
-          "Thrift",
-          "Batchfile",
+          "Kotlin",
           "JavaScript",
-          "HTML"
+          "Objective-C++",
+          "Objective-C",
+          "Java",
+          "Ruby",
+          "CMake",
+          "TypeScript",
+          "Shell",
+          "C",
+          "Swift",
+          "Assembly",
+          "HTML",
+          "Smarty"
         ],
         "tools": [
-          "GitHub Actions"
+          "GitHub Actions",
+          "Jest/Vitest"
         ],
         "skillLevel": "advanced",
         "recommendations": [
-          "Explore Django or FastAPI for web development",
-          "Learn pandas and numpy for data science",
-          "Practice with virtual environments and pip",
+          "Master Spring Boot and Spring Security for enterprise development",
+          "Learn Maven or Gradle for dependency management",
+          "Practice design patterns and SOLID principles",
           "Master modern ES6+ features and async programming",
           "Learn a frontend framework like React, Vue, or Angular"
         ]
       }
     },
-    "createdAt": "2025-10-07T03:26:04.946Z",
-    "lastAccessed": "2025-10-07T03:26:04.946Z"
+    "createdAt": "2025-10-09T03:17:01.061Z",
+    "lastAccessed": "2025-10-09T03:17:01.061Z"
   }
 }

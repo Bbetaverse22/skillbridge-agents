@@ -1,10 +1,10 @@
-# 🚀 SkillBridge.ai: Agentic Career Development Platform
+# 🚀 DevBuilder: AI-Powered Developer Career Growth
 
-An **agentic AI platform** that helps developers identify skill gaps and improve their portfolios through deep research and autonomous actions. Unlike traditional generative AI that just produces reports, SkillBridge.ai **takes action**: analyzing GitHub profiles, creating improvement tasks, and continuously monitoring progress.
+An **agentic AI platform** that helps developers identify skill gaps and improve their portfolios through deep research and autonomous actions. Unlike traditional generative AI that just produces reports, DevBuilder **takes action**: analyzing GitHub profiles, creating improvement tasks, and continuously monitoring progress.
 
 ## 🎯 V1 Vision: Research + Action
 
-SkillBridge.ai V1 focuses on two core innovations:
+DevBuilder V1 focuses on two core innovations:
 1. **Deep Research**: Real-time web scraping for job requirements, salary trends, and learning resources
 2. **Autonomous Actions**: GitHub integration that creates issues, drafts improvements, and tracks progress
 
@@ -137,7 +137,7 @@ Built with advanced AI agents for intelligent career development and portfolio i
 
 ### Database Setup (Prisma Postgres Free Tier)
 
-SkillBridge.ai uses **Prisma Postgres** for data persistence:
+DevBuilder uses **Prisma Postgres** for data persistence:
 
 **Free Tier Includes:**
 - ✅ 5 GB storage (supports 1000s of skill gap analyses)
@@ -164,7 +164,7 @@ SkillBridge.ai uses **Prisma Postgres** for data persistence:
 
 ### LangGraph Research Agent
 
-SkillBridge.ai uses **LangGraph** for autonomous research workflows:
+DevBuilder uses **LangGraph** for autonomous research workflows:
 
 **What it does:**
 - Searches for learning resources based on skill gaps
@@ -234,7 +234,7 @@ GITHUB_TOKEN=your_github_personal_access_token_here
 
 ### Tool Integration Architecture
 
-SkillBridge.ai V1 uses standardized tool integrations for external services:
+DevBuilder V1 uses standardized tool integrations for external services:
 
 **GitHub API Integration** (Built-in):
 - Repository analysis and profiling

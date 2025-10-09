@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npx prisma migrate dev:*)",
       "Bash(echo $DATABASE_URL)",
-      "Bash(pnpm tsc:*)"
+      "Bash(pnpm tsc:*)",
+      "Bash(source:*)",
+      "Bash(pnpm tsx:*)",
+      "Bash(npm search:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

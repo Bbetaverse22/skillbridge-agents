@@ -5,7 +5,7 @@ import { Brain, Github, Menu, X } from "lucide-react";
 import { AgenticSkillAnalyzer } from "./agentic-skill-analyzer";
 import { useState } from "react";
 
-export default function SkillBridgeDashboard() {
+export default function DevBuilderDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
@@ -28,7 +28,7 @@ export default function SkillBridgeDashboard() {
                 <Brain className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">SkillBridge.ai</h1>
+                <h1 className="text-xl font-bold text-white">DevBuilder</h1>
                 <p className="text-xs text-blue-300">
                   Agentic Career Platform
                 </p>

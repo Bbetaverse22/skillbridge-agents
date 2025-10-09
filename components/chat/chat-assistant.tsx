@@ -236,7 +236,7 @@ export default function ChatAssistant({ api, activeTab, onSuggestTab }: ChatAssi
         const errorText =
           toolPart.state === "output-error" ? toolPart.errorText : undefined;
 
-        console.log("[SkillBridge.ai][KnowledgeBase]", {
+        console.log("[DevBuilder][KnowledgeBase]", {
           toolCallId: callId,
           state: toolPart.state,
           input: toolInput,

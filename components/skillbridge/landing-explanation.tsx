@@ -2,7 +2,7 @@
 
 /**
  * Landing Explanation Section
- * Comprehensive overview of SkillBridge before the analysis input
+ * Comprehensive overview of DevBuilder before the analysis input
  */
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,12 +32,12 @@ export function LandingExplanation() {
       <div id="features" className="text-center space-y-6">
         
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          SkillBridge.ai
+          DevBuilder
         </h1>
         
         <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
           Analyze. Research. Act.<br />
-          <span className="font-semibold text-white">SkillBridge.ai</span> — the agentic AI platform that turns skills into progress.
+          <span className="font-semibold text-white">DevBuilder</span> — the agentic AI platform that turns skills into progress.
         </p>
 
       </div>
@@ -74,7 +74,7 @@ export function LandingExplanation() {
       {/* Solution */}
       <Card className="max-w-4xl mx-auto border-2 border-blue-500/50 bg-gradient-to-br from-blue-950/30 to-purple-950/30 backdrop-blur">
         <CardContent className="p-8 space-y-4">
-          <h2 className="text-2xl font-bold text-white">✅ The SkillBridge.ai Solution</h2>
+          <h2 className="text-2xl font-bold text-white">✅ The DevBuilder Solution</h2>
           <p className="text-lg text-gray-300">
             An <span className="font-semibold text-white">agentic AI system</span> that goes beyond analysis. 
             It <span className="font-semibold text-blue-400">researches</span> the market, 
@@ -235,7 +235,7 @@ export function LandingExplanation() {
             </div>
             
             <div className="space-y-3">
-              <h3 className="font-semibold text-lg text-primary">🚀 Agentic AI (SkillBridge.ai)</h3>
+              <h3 className="font-semibold text-lg text-primary">🚀 Agentic AI (DevBuilder)</h3>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start space-x-2">
                   <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -263,7 +263,7 @@ export function LandingExplanation() {
       <div className="text-center space-y-6 py-8">
         <h2 className="text-3xl font-bold italic text-purple-600">Ready to Level Up Your Career?</h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Enter your GitHub username below and let SkillBridge.ai's AI agents analyze your portfolio, 
+          Enter your GitHub username below and let DevBuilder's AI agents analyze your portfolio, 
           research the job market, and create actionable improvement tasks.
         </p>
         

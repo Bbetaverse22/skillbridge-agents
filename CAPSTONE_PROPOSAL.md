@@ -1,4 +1,4 @@
-# SkillBridge.ai V1: Research + Action
+# DevBuilder V1: Research + Action
 ## An MCP-Native Agentic Learning Assistant for Developers
 
 **Author:** Betul  
@@ -10,9 +10,9 @@
 
 ## Executive Summary
 
-SkillBridge.ai is an MCP-native, agentic AI platform that transforms how developers identify and close skill gaps. Unlike traditional learning platforms that provide generic course recommendations, SkillBridge analyzes real GitHub repositories, autonomously researches the best learning resources through multi-step reasoning, and generates actionable GitHub issues with research-backed templates—all while maintaining full transparency in its decision-making process.
+DevBuilder is an MCP-native, agentic AI platform that transforms how developers identify and close skill gaps. Unlike traditional learning platforms that provide generic course recommendations, DevBuilder analyzes real GitHub repositories, autonomously researches the best learning resources through multi-step reasoning, and generates actionable GitHub issues with research-backed templates—all while maintaining full transparency in its decision-making process.
 
-**Key Innovation:** SkillBridge.ai bridges the gap between knowledge discovery and execution by combining AI-powered autonomous research with GitHub-native action generation, creating a closed-loop system that thinks, researches, and acts.
+**Key Innovation:** DevBuilder bridges the gap between knowledge discovery and execution by combining AI-powered autonomous research with GitHub-native action generation, creating a closed-loop system that thinks, researches, and acts.
 
 ---
 
@@ -68,7 +68,7 @@ Existing solutions fall into three categories, each with limitations:
 
 ## Solution Overview
 
-SkillBridge.ai is an autonomous, MCP-native platform that implements a three-phase agentic workflow:
+DevBuilder is an autonomous, MCP-native platform that implements a three-phase agentic workflow:
 
 ### Phase 1: Analysis 🔍
 **Analyze real repositories using GitHub MCP**
@@ -101,7 +101,7 @@ SkillBridge.ai is an autonomous, MCP-native platform that implements a three-pha
 
 ### 1. MCP-Native Architecture 🔌
 
-SkillBridge is built on **Model Context Protocol (MCP)**, positioning it at the forefront of the emerging agentic AI ecosystem.
+DevBuilder is built on **Model Context Protocol (MCP)**, positioning it at the forefront of the emerging agentic AI ecosystem.
 
 #### MCP Servers Integrated:
 
@@ -150,14 +150,14 @@ Tools Used:
 - Audit tool calls and results
 
 **Future-Proof:**
-- As MCP ecosystem grows, SkillBridge automatically gains capabilities
+- As MCP ecosystem grows, DevBuilder automatically gains capabilities
 - No vendor lock-in to specific AI platforms
 
 ---
 
 ### 2. LangGraph Agentic Loops 🔄
 
-Unlike traditional one-shot LLM calls, SkillBridge uses **LangGraph** for stateful, multi-step autonomous reasoning.
+Unlike traditional one-shot LLM calls, DevBuilder uses **LangGraph** for stateful, multi-step autonomous reasoning.
 
 #### Why LangGraph?
 
@@ -293,7 +293,7 @@ This isn't scripted—it's **autonomous quality assessment**.
 
 ### 3. Research Transparency Framework 📊
 
-Unlike black-box AI recommendations, SkillBridge shows its work at every step.
+Unlike black-box AI recommendations, DevBuilder shows its work at every step.
 
 #### Transparency Components:
 
@@ -663,13 +663,13 @@ This autonomous refinement is key to quality results.
 
 #### 1. Individual Developers 👨‍💻
 
-**Before SkillBridge:**
+**Before DevBuilder:**
 - Spend 2-3 hours researching tutorials
 - Don't know which resources are best
 - Generic advice not tied to their code
 - No clear action plan
 
-**With SkillBridge:**
+**With DevBuilder:**
 - Get researched resources in <60 seconds
 - Quality-ranked, confidence-scored results
 - Specific to their tech stack
@@ -681,13 +681,13 @@ This autonomous refinement is key to quality results.
 
 #### 2. Bootcamp Students 🎓
 
-**Before SkillBridge:**
+**Before DevBuilder:**
 - Overwhelmed by "learn everything"
 - Don't know what employers actually want
 - Generic portfolio projects
 - Hard to track progress
 
-**With SkillBridge:**
+**With DevBuilder:**
 - See exact gaps vs. job requirements
 - Prioritized learning path
 - Portfolio improvements tracked in GitHub
@@ -699,13 +699,13 @@ This autonomous refinement is key to quality results.
 
 #### 3. Bootcamp Instructors 👩‍🏫
 
-**Before SkillBridge:**
+**Before DevBuilder:**
 - Manual code review is time-consuming
 - Hard to personalize feedback
 - Can't track all students' progress
 - Generic assignments
 
-**With SkillBridge:**
+**With DevBuilder:**
 - Auto-generate personalized tasks per student
 - Track progress automatically (GitHub issues)
 - Data-driven feedback
@@ -717,13 +717,13 @@ This autonomous refinement is key to quality results.
 
 #### 4. Engineering Managers / Team Leads 👔
 
-**Before SkillBridge:**
+**Before DevBuilder:**
 - Don't know team's skill gaps
 - Hard to plan training budget
 - Can't measure skill development
 - Hiring based on gut feel
 
-**With SkillBridge:**
+**With DevBuilder:**
 - Team-wide skill gap analysis
 - Data-driven training decisions
 - Track skill development over time
@@ -735,13 +735,13 @@ This autonomous refinement is key to quality results.
 
 #### 5. Job Seekers 💼
 
-**Before SkillBridge:**
+**Before DevBuilder:**
 - Don't know why they're rejected
 - Can't identify interview blockers
 - Generic interview prep
 - No portfolio differentiation
 
-**With SkillBridge:**
+**With DevBuilder:**
 - See exact gaps for target roles
 - Fix interview blockers systematically
 - Research-backed preparation
@@ -773,7 +773,7 @@ This autonomous refinement is key to quality results.
 - Applying for junior backend roles
 - Getting interviews but no offers
 
-### SkillBridge Workflow:
+### DevBuilder Workflow:
 
 #### Step 1: Analysis (5 seconds)
 ```
@@ -942,7 +942,7 @@ def test_create_todo(client):
 **Success Metric:** 80%+ test coverage  
 **Interview Impact:** Can confidently answer "Do you test your code?"
 
-*This issue was created by SkillBridge with autonomous research.*
+*This issue was created by DevBuilder with autonomous research.*
 ```
 
 **Issue #2 & #3 created similarly...**
@@ -965,10 +965,10 @@ Sarah now has:
 ```
 Interviewer: "Tell me about testing in your projects."
 
-Before SkillBridge:
+Before DevBuilder:
 Sarah: "Um, I know I should... but haven't really..."  ❌
 
-After SkillBridge:
+After DevBuilder:
 Sarah: "I use pytest with fixtures and parametrize patterns.
         Here's my test suite with 85% coverage [shows GitHub].
         I studied how Flask itself tests their code and applied
@@ -1304,23 +1304,23 @@ WEB_SEARCH_MCP_URL=xxx
 
 ### The Bigger Picture
 
-SkillBridge represents a fundamental shift in how we approach developer education:
+DevBuilder represents a fundamental shift in how we approach developer education:
 
 #### From Generic to Personalized
 **Traditional:** "Everyone should learn Docker"  
-**SkillBridge:** "Based on YOUR Flask project and backend role research, Docker is your #2 priority after testing"
+**DevBuilder:** "Based on YOUR Flask project and backend role research, Docker is your #2 priority after testing"
 
 #### From Advice to Action
 **Traditional:** "You should improve your portfolio"  
-**SkillBridge:** "Here's GitHub issue #42 with researched resources, checklist, and template"
+**DevBuilder:** "Here's GitHub issue #42 with researched resources, checklist, and template"
 
 #### From Black-Box to Transparent
 **Traditional:** "AI recommends this course"  
-**SkillBridge:** "Agent researched 50 sources, this scored 4.8⭐, 87% confidence because..."
+**DevBuilder:** "Agent researched 50 sources, this scored 4.8⭐, 87% confidence because..."
 
 #### From One-Shot to Agentic
 **Traditional:** Single LLM call → static answer  
-**SkillBridge:** Multi-step reasoning → autonomous quality improvement
+**DevBuilder:** Multi-step reasoning → autonomous quality improvement
 
 ---
 
@@ -1408,7 +1408,7 @@ V3: Enterprise
 
 ## Conclusion
 
-SkillBridge V1 demonstrates that autonomous, MCP-native agents can transform developer education by:
+DevBuilder V1 demonstrates that autonomous, MCP-native agents can transform developer education by:
 
 1. **Researching deeply** through multi-step LangGraph loops
 2. **Deciding autonomously** when quality is sufficient vs. retry needed
@@ -1419,7 +1419,7 @@ This is not just a tool—it's a new paradigm for learning: **research-backed, a
 
 The future of education isn't generic courses. It's personalized, agentic systems that research the best path and help you execute it.
 
-**SkillBridge V1 is that future, today.**
+**DevBuilder V1 is that future, today.**
 
 ---
 

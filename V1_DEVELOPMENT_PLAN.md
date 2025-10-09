@@ -60,9 +60,92 @@ Status:
 
 ---
 
+#### Issue #0: Setup Official GitHub MCP Server ✅ **COMPLETE**
+**Priority:** Critical
+**Labels:** `priority-critical`, `type-feature`, `component-mcp`
+**Estimate:** 3 hours
+**Completed:** October 8, 2025
+
+**Description:**
+Install and configure official Anthropic GitHub MCP server for LangGraph tool integration.
+
+**Tasks:**
+- [x] Install `@modelcontextprotocol/sdk` package
+- [x] Install `@modelcontextprotocol/server-github` package
+- [x] Create MCP client configuration file
+- [x] Configure GitHub token for MCP authentication
+- [x] Create MCP tools wrapper for LangGraph
+- [x] Test GitHub MCP connection
+- [x] Verify available tools: `create_issue`, `search_repositories`, `get_file_contents`
+- [x] Update package.json with MCP dependencies
+- [x] Update README with GitHub MCP setup instructions
+
+**Acceptance Criteria:**
+- ✅ GitHub MCP server installed and configured
+- ✅ MCP client can connect to GitHub (via Docker)
+- ✅ Tools are accessible and working (101 tools found)
+- ✅ Tests pass confirming MCP setup
+- ✅ GitHub REST API fallback implemented (works on Vercel)
+
+**Implementation Notes:**
+- GitHub MCP requires Docker (`ghcr.io/github/github-mcp-server`)
+- Implemented GitHub REST API client as fallback for Vercel deployment
+- Full documentation in `docs/GITHUB_MCP_STATUS.md`
+- Token verified working with GitHub API
+
+**Files to Create/Modify:**
+- `package.json`
+- `lib/mcp/github-mcp-client.ts`
+- `lib/mcp/github-mcp-tools.ts`
+- `lib/mcp/types.ts`
+- `README.md`
+
+**Example Setup:**
+```typescript
+// lib/mcp/github-mcp-client.ts
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+
+export class GitHubMCPClient {
+  private client: Client;
+
+  async connect() {
+    const transport = new StdioClientTransport({
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-github'],
+      env: {
+        ...process.env,
+        GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_TOKEN
+      }
+    });
+
+    this.client = new Client({
+      name: 'skillbridge-github-client',
+      version: '1.0.0',
+    }, {
+      capabilities: {
+        tools: {}
+      }
+    });
+
+    await this.client.connect(transport);
+    return this.client;
+  }
+
+  async callTool(toolName: string, args: Record<string, unknown>) {
+    return await this.client.callTool({
+      name: toolName,
+      arguments: args
+    });
+  }
+}
+```
+
+---
+
 #### Issue #1: Setup LangGraph Dependencies
-**Priority:** Critical  
-**Labels:** `priority-critical`, `type-feature`, `component-langgraph`  
+**Priority:** Critical
+**Labels:** `priority-critical`, `type-feature`, `component-langgraph`
 **Estimate:** 2 hours
 
 **Description:**
@@ -70,7 +153,7 @@ Install and configure LangGraph for autonomous agent development.
 
 **Tasks:**
 - [ ] Install `@langchain/langgraph` package
-- [ ] Install `@langchain/core` package  
+- [ ] Install `@langchain/core` package
 - [ ] Install `@langchain/openai` package
 - [ ] Configure OpenAI API key
 - [ ] Create basic test to verify LangGraph works
@@ -208,34 +291,212 @@ Create node that scores and ranks learning resources by quality.
 
 ---
 
-#### Issue #5: Implement GitHub Examples Search Node
-**Priority:** High  
-**Labels:** `priority-high`, `type-feature`, `component-langgraph`, `component-mcp`  
-**Estimate:** 4 hours
+#### Issue #5a: Build Custom Template Creator MCP Server
+**Priority:** High
+**Labels:** `priority-high`, `type-feature`, `component-mcp`
+**Estimate:** 6 hours
 
 **Description:**
-Create node that finds example GitHub projects using GitHub MCP.
+Create a custom MCP server that extracts clean, reusable templates from GitHub repositories by removing custom business logic and replacing it with placeholders.
 
 **Tasks:**
-- [ ] Create `searchExamplesNode` function
-- [ ] Use existing GitHub MCP integration
-- [ ] Build search query from skill gap
-- [ ] Filter by language (match user's stack)
-- [ ] Sort by stars
-- [ ] Extract: name, stars, description, URL
-- [ ] Limit to top 10 results
-- [ ] Handle rate limits
-- [ ] Write tests
+- [ ] Install MCP SDK dependencies
+- [ ] Create `template-creator` MCP server in `lib/mcp/template-creator/server.ts`
+- [ ] Implement `extract_template` tool
+  - Parse repository files
+  - Remove business logic
+  - Replace values with placeholders (e.g., {{PROJECT_NAME}})
+  - Preserve structure and types
+- [ ] Implement `analyze_structure` tool
+  - Identify key files and patterns
+  - Calculate template worthiness score
+  - Recommend file patterns for extraction
+- [ ] Implement `generate_boilerplate` tool
+  - Generate starter code based on technology
+  - Include common patterns and best practices
+- [ ] Add error handling and logging
+- [ ] Create package.json and build configuration
+- [ ] Write integration tests
 
 **Acceptance Criteria:**
-- Finds relevant GitHub examples
-- Returns 5-10 high-quality projects
-- Properly sorted by stars
+- MCP server runs on stdio transport
+- All three tools work correctly
+- Template extraction removes business logic
+- Placeholders are clearly marked
+- Template worthiness score is accurate
 - Tests pass
+
+**Files to Create:**
+- `lib/mcp/template-creator/server.ts`
+- `lib/mcp/template-creator/client.ts`
+- `lib/mcp/template-creator/package.json`
+- `lib/mcp/template-creator/tsconfig.json`
+- `lib/mcp/template-creator/examples/usage-example.ts`
+
+**Example Tool Call:**
+```typescript
+// Extract template from a Next.js repo
+const result = await mcpClient.callTool('extract_template', {
+  repoUrl: 'https://github.com/vercel/next.js/examples/with-typescript',
+  filePatterns: ['*.ts', '*.tsx', 'package.json'],
+  options: {
+    preserveStructure: true,
+    removeBusinessLogic: true
+  }
+});
+```
+
+---
+
+#### Issue #5b: Implement GitHub Examples Search Node (Using Official GitHub MCP) ✅ **COMPLETE**
+**Priority:** High
+**Labels:** `priority-high`, `type-feature`, `component-langgraph`, `component-mcp`
+**Estimate:** 4 hours
+**Completed:** October 8, 2025
+
+**Description:**
+Create node that finds example GitHub projects using Official Anthropic GitHub MCP server.
+
+**Tasks:**
+- [x] Create `searchGitHubExamplesNode` function
+- [x] Import GitHub REST API client from Issue #0 (fallback for Vercel)
+- [x] Use GitHub REST API `search/repositories` endpoint
+- [x] Build search query from skill gap (e.g., "jest testing language:typescript stars:>100")
+- [x] Parse API response
+- [x] Filter by language (match user's stack)
+- [x] Sort by stars (handled by GitHub search API)
+- [x] Extract: name, stars, description, URL
+- [x] Limit to top 10 results
+- [x] Handle rate limits and API errors
+- [x] Write tests with real API calls
+- [x] Add conditional edges for retry logic
+- [x] Integrate into LangGraph workflow
+
+**Acceptance Criteria:**
+- ✅ GitHub search works correctly (tested with 3 different queries)
+- ✅ Finds relevant GitHub examples (10 high-quality projects per query)
+- ✅ Properly sorted by stars
+- ✅ API errors handled gracefully (fallback to empty results)
+- ✅ Tests pass (React Auth: 10 examples, Flask API: 10 examples, ML: 10 examples)
+- ✅ Conditional edges implemented (retry if < 3 examples, max 2 iterations)
+- ✅ Connected to LangGraph workflow
+
+**Implementation Notes:**
+- Used GitHub REST API instead of MCP for Vercel compatibility
+- Added quality scoring algorithm (stars, description, forks, recency)
+- Implemented search query builder with qualifiers (language, stars, pushed date)
+- Added conditional flow based on open_deep_research patterns
+- Full documentation in `docs/LANGGRAPH_NODES_STATUS.md`
 
 **Files to Create:**
 - `lib/agents/langgraph/nodes/search-examples.ts`
 - `lib/agents/langgraph/nodes/search-examples.test.ts`
+
+**Example Implementation:**
+```typescript
+// lib/agents/langgraph/nodes/search-examples.ts
+import { GitHubMCPClient } from '@/lib/mcp/github-mcp-client';
+
+export async function searchExamplesNode(state: ResearchState) {
+  const mcpClient = new GitHubMCPClient();
+  await mcpClient.connect();
+
+  const searchQuery = `${state.skillGap} language:${state.detectedLanguage} stars:>100`;
+
+  const result = await mcpClient.callTool('search_repositories', {
+    query: searchQuery,
+    per_page: 10,
+    sort: 'stars',
+    order: 'desc'
+  });
+
+  const examples = result.content[0].text; // Parse MCP response
+
+  return {
+    ...state,
+    examples: JSON.parse(examples).items.slice(0, 10)
+  };
+}
+```
+
+---
+
+#### Issue #5c: Implement Template Creation Node (Using Custom Template Creator MCP)
+**Priority:** High
+**Labels:** `priority-high`, `type-feature`, `component-langgraph`, `component-mcp`
+**Estimate:** 5 hours
+
+**Description:**
+Create LangGraph node that uses the custom Template Creator MCP to extract clean templates from top example repositories. This provides users with ready-to-use starter code.
+
+**Tasks:**
+- [ ] Create `createTemplatesNode` function
+- [ ] Import Template Creator MCP client from Issue #5a
+- [ ] Iterate through top 3 example repositories from previous node
+- [ ] For each repo:
+  - Call `analyze_structure` to check template worthiness
+  - If worthiness >= 70%, call `extract_template`
+  - Store extracted template with metadata
+- [ ] Generate template README with usage instructions
+- [ ] Format templates for GitHub issue inclusion
+- [ ] Handle MCP errors gracefully
+- [ ] Add comprehensive logging
+- [ ] Write tests with mocked MCP responses
+
+**Acceptance Criteria:**
+- Template Creator MCP called correctly
+- Top 3 examples processed
+- Templates extracted with placeholders
+- Template worthiness filtering works (>= 70%)
+- README generated for each template
+- MCP errors handled gracefully
+- Tests pass
+
+**Files to Create:**
+- `lib/agents/langgraph/nodes/create-templates.ts`
+- `lib/agents/langgraph/nodes/create-templates.test.ts`
+
+**Integration with LangGraph:**
+```typescript
+// Updated ResearchState
+interface ResearchState {
+  // ... existing fields
+  examples: GitHubExample[];      // From Issue #5b
+  templates: ExtractedTemplate[];  // NEW - from this node
+  // ... rest of state
+}
+
+// Updated workflow
+search → evaluate → examples → templates → confidence → synthesize
+```
+
+**Example Output:**
+```typescript
+{
+  templates: [
+    {
+      sourceRepo: "https://github.com/vercel/next.js/examples/with-typescript",
+      files: [
+        { path: "package.json", content: "...", placeholders: ["PROJECT_NAME"] },
+        { path: "tsconfig.json", content: "...", placeholders: [] }
+      ],
+      structure: "...",
+      instructions: ["Replace {{PROJECT_NAME}}", "Install dependencies"],
+      placeholders: {
+        "PROJECT_NAME": "Your project name",
+        "PROJECT_DESCRIPTION": "Brief description"
+      },
+      templateWorthiness: 0.85
+    }
+  ]
+}
+```
+
+**Benefits:**
+- Users get clean, ready-to-use starter code
+- No need to manually extract patterns from examples
+- Placeholders make customization easy
+- Template quality score ensures high-quality output
 
 ---
 
@@ -331,14 +592,23 @@ Connect all nodes into a complete LangGraph workflow with conditional edges.
 - `lib/agents/langgraph/research-agent.ts`
 - `lib/agents/langgraph/research-agent.test.ts`
 
-**Graph Structure:**
+**Graph Structure (Updated with Templates Node):**
 ```
-search → evaluate → examples → confidence
-                                    ↓
-                         (if < 0.7) ↓ (if >= 0.7)
-                                    ↓
-                          retry ←  decision → synthesize
+search → evaluate → examples → templates → confidence
+                                               ↓
+                                    (if < 0.7) ↓ (if >= 0.7)
+                                               ↓
+                                     retry ←  decision → synthesize
 ```
+
+**Node Summary:**
+1. `search` - Find learning resources (web search)
+2. `evaluate` - Score and rank resources
+3. `examples` - Find GitHub example projects (GitHub MCP)
+4. `templates` - Extract clean templates (Custom Template Creator MCP) **NEW**
+5. `confidence` - Calculate quality score
+6. `decision` - Retry or proceed
+7. `synthesize` - Generate final recommendations
 
 ---
 
@@ -461,33 +731,82 @@ Create issue body template that includes all research findings.
 
 ---
 
-#### Issue #13: Integrate GitHub Issue Creation
-**Priority:** Critical  
-**Labels:** `priority-critical`, `type-feature`, `component-mcp`  
-**Estimate:** 4 hours
+#### Issue #13: Integrate GitHub Issue Creation (Using Official GitHub MCP)
+**Priority:** Critical
+**Labels:** `priority-critical`, `type-feature`, `component-mcp`
+**Estimate:** 5 hours
 
 **Description:**
-Connect to GitHub MCP to actually create issues in user repositories.
+Connect to Official Anthropic GitHub MCP server to actually create issues in user repositories.
 
 **Tasks:**
-- [ ] Use GitHub MCP `create_issue` tool
-- [ ] Handle authentication (GitHub token)
-- [ ] Add labels to issues
-- [ ] Set assignee (user)
-- [ ] Handle errors (permissions, rate limits)
-- [ ] Return issue URL
-- [ ] Add logging
-- [ ] Write tests
+- [ ] Import GitHub MCP client from Issue #0
+- [ ] Use MCP `create_issue` tool
+- [ ] Pass user's GitHub OAuth token to MCP (for authenticated requests)
+- [ ] Format issue title and body from research results
+- [ ] Add labels to issues via MCP
+- [ ] Set assignee (user) if supported
+- [ ] Parse MCP response to get issue URL and number
+- [ ] Handle errors (permissions, rate limits, invalid repo)
+- [ ] Return issue URL and metadata
+- [ ] Add comprehensive logging
+- [ ] Write tests with mocked MCP responses
 
 **Acceptance Criteria:**
+- GitHub MCP `create_issue` tool called correctly
 - Issues created successfully in test repo
 - Labels applied correctly
-- Error handling works
-- Tests pass
+- User's OAuth token used (not global GITHUB_TOKEN)
+- Error handling works (permissions, not found, rate limit)
+- Tests pass with mocked MCP
 
 **Files to Create:**
 - `lib/agents/portfolio-builder/github-integration.ts`
 - `lib/agents/portfolio-builder/github-integration.test.ts`
+
+**Example Implementation:**
+```typescript
+// lib/agents/portfolio-builder/github-integration.ts
+import { GitHubMCPClient } from '@/lib/mcp/github-mcp-client';
+
+export async function createGitHubIssue(
+  repo: string, // Format: "owner/repo"
+  title: string,
+  body: string,
+  labels: string[],
+  userAccessToken: string // From OAuth session
+) {
+  const mcpClient = new GitHubMCPClient(userAccessToken);
+  await mcpClient.connect();
+
+  try {
+    const result = await mcpClient.callTool('create_issue', {
+      owner: repo.split('/')[0],
+      repo: repo.split('/')[1],
+      title,
+      body,
+      labels,
+      assignees: [repo.split('/')[0]] // Assign to repo owner
+    });
+
+    const issueData = JSON.parse(result.content[0].text);
+
+    return {
+      success: true,
+      issueUrl: issueData.html_url,
+      issueNumber: issueData.number
+    };
+  } catch (error) {
+    console.error('GitHub MCP create_issue failed:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+```
+
+**Important:** This requires user OAuth tokens (from Issue #40-50), not just GITHUB_TOKEN!
 
 ---
 

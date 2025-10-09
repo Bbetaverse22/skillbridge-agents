@@ -111,6 +111,12 @@ function buildResearchGraph() {
     };
   });
 
+  // Import the GitHub examples search node
+  const { searchGitHubExamplesNode } = require("./nodes/search-github-examples");
+
+  // Add GitHub examples search node
+  workflow.addNode("search_github", searchGitHubExamplesNode);
+
   // Placeholder node - will be implemented in Issue #4
   workflow.addNode("evaluate", async (state: ResearchState) => {
     console.log("⚖️  Evaluating search results...");
@@ -138,9 +144,31 @@ function buildResearchGraph() {
     };
   });
 
-  // Connect nodes (simple linear flow for now)
+  // Connect nodes with conditional flow
   workflow.addEdge(START, "search" as any);
-  workflow.addEdge("search" as any, "evaluate" as any);
+  workflow.addEdge("search" as any, "search_github" as any);
+
+  // Conditional edge: Continue searching or evaluate?
+  workflow.addConditionalEdges(
+    "search_github" as any,
+    (state: ResearchState) => {
+      // If we found good examples, move to evaluation
+      if (state.examples && state.examples.length >= 3) {
+        return "evaluate";
+      }
+      // If not enough examples and haven't iterated too much, search again
+      if (state.iterationCount < 2) {
+        return "search";
+      }
+      // Otherwise, proceed to evaluation with what we have
+      return "evaluate";
+    },
+    {
+      search: "search" as any,
+      evaluate: "evaluate" as any,
+    }
+  );
+
   workflow.addEdge("evaluate" as any, "synthesize" as any);
   workflow.addEdge("synthesize" as any, END);
 
